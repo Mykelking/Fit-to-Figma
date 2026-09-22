@@ -38,7 +38,7 @@ A Node:
   "fills": [ { "type": "solid", "color": "#rrggbb", "opacity": 1 } | { "type": "linear", "angle": 90, "stops": [ { "at": 0, "color": "#…", "opacity": 1 } ] } | { "type": "image", "asset": "<id>", "scale": "fill" | "fit" } ],
   "strokes": { "color": "#…", "opacity": 1, "weight": 1, "align": "inside" | "center" | "outside" },
   "radius": [8, 8, 8, 8],                    // tl, tr, br, bl
-  "effects": [ { "type": "shadow", "x": 0, "y": 2, "blur": 8, "spread": 0, "color": "#…", "opacity": 0.2 } | { "type": "blur", "radius": 12 } | { "type": "backdrop-blur", "radius": 12 } ],
+  "effects": [ { "type": "shadow" | "inner-shadow", "x": 0, "y": 2, "blur": 8, "spread": 0, "color": "#…", "opacity": 0.2 } | { "type": "blur", "radius": 12 } | { "type": "backdrop-blur", "radius": 12 } ],
   "opacity": 1,
   "clip": true,
   "text": {                                  // text only
@@ -55,6 +55,16 @@ A Node:
 }
 ```
 
+What the shapes above leave unsaid:
+
+- A `shadow` is a drop shadow; an `inner-shadow` is the same thing drawn inside the box, which is CSS `inset` and what Figma calls an inner shadow.
+- A gradient `stop`'s `at` runs 0 to 1 along the gradient line, not 0 to 100.
+- A linear paint's `angle` is degrees clockwise from "to top", the same reading CSS uses: 0 points up, 90 points right, 180 points down. A CSS corner keyword becomes the 45 degree diagonal, because a corner in CSS follows the box's shape and Figma's angle does not.
+- A token's `value` is always the string the page held; `kind` says how to read it.
+- `layout`, `sizing`, `strokes`, `text` and `semantic` are each optional, but when one is present every field in it is there.
+- An `image` or a `vector` node always has an `asset`, and a `text` node always has `text`. Nothing else is made compulsory by a node's `type`.
+- Lengths are numbers of CSS pixels, never strings with units. `lineHeight` and `letterSpacing` are already resolved to pixels.
+
 Rules the extractor keeps:
 
 - Boxes come from the browser's layout, not from the stylesheet: what Figma gets is what the page drew.
@@ -70,3 +80,11 @@ Rules the plugin keeps:
 - Fonts are loaded before text is set; a font Figma does not have falls back to Inter and is listed once in the run's report.
 - `tokens` become Figma variables in a collection named after the source; a node's colour that matches a token is bound to it.
 - A second run with the same source updates frames by `id` in place.
+
+## Decisions the first fixtures forced
+
+- **An element that both paints and holds text is a frame with one text child.** Figma text cannot carry a background, a border, a shadow or padding, so a badge or a button label becomes a frame (its box, fills, strokes, radius, effects, padding) holding a text node (the run). An element that paints nothing and has no padding is a text node on its own.
+- **A mixed-run element keeps its wrapper.** A paragraph with a bold run becomes a frame in row layout that wraps, holding one text node per run, so the runs reflow together in Figma.
+- **Wrapper chains are never collapsed.** A `div` holding one `div` holding one `span` is three nodes. Fidelity to the page wins over a tidier layer list; a later option may flatten, and it is off by default.
+- **Elliptical radius takes the horizontal value, then clamps to half the shorter side.** `60px / 24px` on a 220x80 box is 40.
+- **Hidden means any of:** `display: none`, `visibility: hidden`, `opacity: 0`, zero width or height after layout, or a box entirely outside the root's box. Off-canvas is hidden. Inside a scroll container, a child entirely outside the container's visible box is dropped; one partly inside is kept whole and the container clips.
