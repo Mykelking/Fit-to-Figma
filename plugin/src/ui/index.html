@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Fit to Figma</title>
+<style>
+  :root {
+    color-scheme: light dark;
+    --fg: var(--figma-color-text, #1a1a1a);
+    --dim: var(--figma-color-text-secondary, #6b6b6b);
+    --bg: var(--figma-color-bg, #fff);
+    --line: var(--figma-color-border, #e0e0e0);
+    --accent: var(--figma-color-bg-brand, #0d99ff);
+    --bad: var(--figma-color-text-danger, #c7361f);
+    --warn: var(--figma-color-text-warning, #8c6a00);
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    padding: 12px;
+    font: 11px/1.45 Inter, "Helvetica Neue", Arial, sans-serif;
+    color: var(--fg);
+    background: var(--bg);
+  }
+  h2 { font-size: 11px; font-weight: 600; margin: 14px 0 6px; }
+  p { margin: 0 0 4px; }
+  .tabs { display: flex; gap: 2px; background: var(--line); padding: 2px; border-radius: 6px; }
+  .tabs button {
+    flex: 1; border: 0; border-radius: 4px; padding: 5px 4px; font: inherit;
+    background: transparent; color: var(--dim); cursor: pointer;
+  }
+  .tabs button.on { background: var(--bg); color: var(--fg); font-weight: 600; }
+  .panel { margin-top: 10px; }
+  .drop {
+    border: 1px dashed var(--line); border-radius: 6px; padding: 18px 10px;
+    text-align: center; color: var(--dim); cursor: pointer;
+  }
+  .drop.over { border-color: var(--accent); color: var(--fg); }
+  .drop strong { display: block; color: var(--fg); font-weight: 600; }
+  textarea, input[type=text], input[type=number], select {
+    width: 100%; font: inherit; color: var(--fg); background: var(--bg);
+    border: 1px solid var(--line); border-radius: 4px; padding: 5px 6px;
+  }
+  textarea { height: 92px; resize: vertical; margin-top: 8px; font-family: ui-monospace, Menlo, Consolas, monospace; }
+  .row { display: flex; gap: 8px; align-items: center; margin-bottom: 6px; }
+  .row label { flex: 0 0 96px; color: var(--dim); }
+  .check { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; }
+  .check input { margin: 0; }
+  button.go {
+    width: 100%; margin-top: 12px; padding: 8px; font: inherit; font-weight: 600;
+    color: #fff; background: var(--accent); border: 0; border-radius: 6px; cursor: pointer;
+  }
+  button.go:disabled { opacity: .5; cursor: default; }
+  .bar { height: 3px; background: var(--line); border-radius: 2px; margin-top: 10px; overflow: hidden; }
+  .bar > div { height: 100%; width: 0; background: var(--accent); transition: width .1s linear; }
+  #status { margin-top: 8px; color: var(--dim); min-height: 16px; }
+  #status.bad { color: var(--bad); }
+  #out { margin-top: 4px; max-height: 190px; overflow: auto; }
+  #out p { color: var(--dim); }
+  #out p.warn { color: var(--warn); }
+  #out p.bad { color: var(--bad); font-family: ui-monospace, Menlo, Consolas, monospace; }
+  .hint { color: var(--dim); }
+  [hidden] { display: none !important; }
+</style>
+</head>
+<body>
+
+<div class="tabs">
+  <button data-way="tree" class="on">Tree</button>
+  <button data-way="html">HTML</button>
+  <button data-way="url">URL</button>
+</div>
+
+<section class="panel" data-panel="tree">
+  <div class="drop" id="tree-drop">
+    <strong>Drop a .json tree</strong>
+    <span id="tree-name">or click to choose one</span>
+  </div>
+  <input type="file" id="tree-file" accept=".json,application/json" hidden>
+</section>
+
+<section class="panel" data-panel="html" hidden>
+  <div class="drop" id="html-drop">
+    <strong>Drop an .html file</strong>
+    <span>or click to choose one</span>
+  </div>
+  <input type="file" id="html-file" accept=".html,.htm,text/html" hidden>
+  <textarea id="html-text" placeholder="or paste markup here" spellcheck="false"></textarea>
+  <p class="hint">Rendered here in a sandboxed frame. Scripts do not run.</p>
+</section>
+
+<section class="panel" data-panel="url" hidden>
+  <input type="text" id="url" placeholder="https://example.com/page">
+  <p class="hint" id="url-note"></p>
+</section>
+
+<h2>Options</h2>
+<div class="row">
+  <label for="viewport">Viewport</label>
+  <select id="viewport">
+    <option value="390x844">390 x 844 phone</option>
+    <option value="1280x800">1280 x 800</option>
+    <option value="1440x900">1440 x 900</option>
+    <option value="custom">Custom</option>
+  </select>
+</div>
+<div class="row" id="custom" hidden>
+  <label>Custom</label>
+  <input type="number" id="custom-w" value="390" min="40" max="8000">
+  <input type="number" id="custom-h" value="844" min="40" max="8000">
+</div>
+<div class="row">
+  <label for="selector">One frame per</label>
+  <input type="text" id="selector" placeholder="CSS selector, blank for the whole page">
+</div>
+<div class="check"><input type="checkbox" id="bind" checked><label for="bind">Bind colours to variables</label></div>
+<div class="check"><input type="checkbox" id="update"><label for="update">Update existing frames by id</label></div>
+
+<button class="go" id="go">Build</button>
+<div class="bar" id="bar" hidden><div id="bar-fill"></div></div>
+<p id="status"></p>
+<div id="out"></div>
+
+<script>/* @inline-script */</script>
+</body>
+</html>

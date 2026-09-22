@@ -1,0 +1,23 @@
+{
+  "name": "@fit-to-figma/plugin",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "license": "MIT",
+  "description": "The Figma plugin: reads a design tree and builds native layers.",
+  "engines": { "node": ">=24" },
+  "scripts": {
+    "build": "node build.mjs",
+    "watch": "node build.mjs --watch",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@fit-to-figma/tree": "^0.1.0",
+    "@fit-to-figma/extract": "^0.1.0"
+  },
+  "devDependencies": {
+    "@figma/plugin-typings": "^1.109.0",
+    "esbuild": "^0.25.0"
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "extends": "../tsconfig.base.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "declaration": false,
+    "declarationMap": false,
+    "sourceMap": false,
+    "lib": ["ES2023", "DOM", "DOM.Iterable"],
+    "types": ["@figma/plugin-typings"],
+    "baseUrl": "..",
+    "paths": {
+      "@fit-to-figma/tree": ["packages/tree/src/index.ts"],
+      "@fit-to-figma/extract": ["packages/extract/src/index.ts"]
+    }
+  },
+  "include": ["src/**/*.ts", "test/**/*.ts"]
+}

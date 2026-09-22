@@ -1,0 +1,12 @@
+{
+  "name": "Fit to Figma",
+  "id": "fit-to-figma",
+  "api": "1.0.0",
+  "editorType": ["figma"],
+  "main": "dist/code.js",
+  "ui": "dist/ui.html",
+  "networkAccess": {
+    "allowedDomains": ["none"],
+    "reasoning": "The plugin reads a tree file or HTML you hand it and draws it. It sends nothing anywhere. To fetch a page by URL, add that page's domain to allowedDomains, or run the CLI, which needs no network permission from Figma at all."
+  }
+}
