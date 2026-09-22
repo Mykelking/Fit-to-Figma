@@ -11,6 +11,7 @@ export function validTree(): DesignTree {
       capturedAt: '2026-09-22T09:30:00Z',
       viewport: { w: 390, h: 844 },
     },
+    place: { x: 1200, y: -80 },
     fonts: [{ family: 'Plus Jakarta Sans', weights: [400, 600, 700] }],
     assets: {
       a1: { type: 'image', mime: 'image/png', data: 'iVBORw0KGgo=', w: 48, h: 48 },

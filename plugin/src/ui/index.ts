@@ -1,7 +1,7 @@
 import type { DesignTree } from '@fit-to-figma/tree';
 import type { BuildReport, MainToUi, UiToMain } from '../shared/messages.js';
 import { treesFromHtml } from './render.js';
-import { checkTree } from './validate.js';
+import { checkTrees } from './validate.js';
 import type { TreeProblem } from './validate.js';
 
 type Way = 'tree' | 'html' | 'url';
@@ -51,20 +51,19 @@ function setWay(next: Way): void {
   clearOut();
 }
 
-// 1. Drop a tree.
+// 1. Drop a tree, or a file holding an array of them.
 dropTarget(el.treeDrop, el.treeFile, async (file) => {
-  // validateTree takes the JSON text and reports where it goes wrong.
-  const checked = checkTree(await file.text());
+  // checkTrees parses the text once and reports where each tree goes wrong.
+  const checked = checkTrees(await file.text());
+  el.treeName.textContent = file.name;
   if (!checked.ok) {
     loadedTrees = [];
-    el.treeName.textContent = file.name;
     fail(count(checked.errors.length, 'problem') + ' in the tree.', checked.errors);
     return;
   }
-  loadedTrees = [checked.tree];
+  loadedTrees = checked.trees;
   loadedName = file.name;
-  el.treeName.textContent = file.name;
-  note(loadedName + ' reads clean.');
+  note(checked.trees.length === 1 ? loadedName + ' reads clean.' : count(checked.trees.length, 'tree') + ' read clean.');
 });
 
 // 2. Drop or paste HTML.

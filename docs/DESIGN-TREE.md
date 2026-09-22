@@ -11,6 +11,7 @@ Version 1. JSON. Positions in CSS pixels, relative to the root frame.
 {
   "version": 1,
   "source": { "kind": "url" | "file", "ref": "https://…", "title": "…", "capturedAt": "RFC 3339", "viewport": { "w": 390, "h": 844 } },
+  "place": { "x": 0, "y": 0 },               // optional: where the root frame goes on the page
   "fonts": [ { "family": "Plus Jakarta Sans", "weights": [400, 600, 700] } ],
   "assets": { "<id>": { "type": "image" | "svg", "mime": "image/png", "data": "<base64 or svg markup>", "w": 0, "h": 0 } },
   "tokens": [ { "name": "--color-primary", "value": "#9c4679", "kind": "color" | "number" | "string" } ],
@@ -60,6 +61,7 @@ What the shapes above leave unsaid:
 - A `shadow` is a drop shadow; an `inner-shadow` is the same thing drawn inside the box, which is CSS `inset` and what Figma calls an inner shadow.
 - A gradient `stop`'s `at` runs 0 to 1 along the gradient line, not 0 to 100.
 - A linear paint's `angle` is degrees clockwise from "to top", the same reading CSS uses: 0 points up, 90 points right, 180 points down. A CSS corner keyword becomes the 45 degree diagonal, because a corner in CSS follows the box's shape and Figma's angle does not.
+- `place` is where the root frame goes on the Figma page, in Figma canvas units, absolute, and it is optional. A tree without it is laid out beside the last one, from the centre of the view. The plugin rounds both numbers, and it ignores `place` when it is updating an existing frame in place: the frame already on the page keeps its position.
 - A token's `value` is always the string the page held; `kind` says how to read it.
 - `layout`, `sizing`, `strokes`, `text` and `semantic` are each optional, but when one is present every field in it is there.
 - An `image` or a `vector` node always has an `asset`, and a `text` node always has `text`. Nothing else is made compulsory by a node's `type`.
@@ -73,6 +75,9 @@ Rules the extractor keeps:
 - Inline SVG becomes a vector asset; `<img>` and CSS background images become image assets; an icon drawn by a font stays text.
 - Hidden, zero-sized and off-canvas elements are dropped. Scroll containers keep the visible part.
 - `semantic` is carried for the plugin's component matching and is never needed to draw.
+
+One file can hold many trees: a JSON array of whole trees, by convention named
+`.trees.json`. The plugin builds them in order and does not read the extension.
 
 Rules the plugin keeps:
 

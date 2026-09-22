@@ -157,6 +157,21 @@ describe('validateTree', () => {
     expect(validateTree(tree).ok).toBe(false);
   });
 
+  it('place is optional and takes two numbers', () => {
+    expect(validateTree(drop(clone(validTree()), 'place')).ok).toBe(true);
+    expect(validateTree(put(clone(validTree()), 'place', { x: -40.5, y: 0 })).ok).toBe(true);
+  });
+
+  it('place.x must be a number, not a string', () => {
+    const result = validateTree(put(clone(validTree()), 'place', { x: '10', y: 0 }));
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.errors.map((issue) => issue.path)).toContain('place.x');
+  });
+
+  it('place refuses an infinity', () => {
+    expect(validateTree(put(clone(validTree()), 'place', { x: 0, y: Infinity })).ok).toBe(false);
+  });
+
   it('reports every bad field at once, not just the first', () => {
     let tree = clone(validTree()) as unknown;
     tree = drop(tree, 'root.id');

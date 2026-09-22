@@ -1,4 +1,4 @@
-import type { DesignTree, Layout, Node as TreeNode, Sizing, TextStyle } from '@fit-to-figma/tree';
+import type { DesignTree, Layout, Node as TreeNode, Place, Sizing, TextStyle } from '@fit-to-figma/tree';
 import type { BuildOptions, BuildReport } from '../shared/messages.js';
 import { emptyReport } from '../shared/messages.js';
 import { AssetStore } from './assets.js';
@@ -87,10 +87,11 @@ export async function build(
     ctx.assets = new AssetStore(tree.assets ?? {});
     ctx.label = sourceName(tree);
     try {
-      const frame = await buildRoot(tree, ctx, offset);
-      if (frame) {
-        made.push(frame);
-        offset += frame.width + 120;
+      const built = await buildRoot(tree, ctx, offset);
+      if (built) {
+        made.push(built.frame);
+        // A placed tree sits where it asked to; it does not move the next one.
+        if (!built.placed) offset += built.frame.width + 120;
       }
     } catch (err) {
       report.warnings.push(ctx.label + ': ' + message(err));
@@ -130,9 +131,16 @@ function sourceName(tree: DesignTree): string {
   return ref !== '' ? ref : 'Fit to Figma';
 }
 
-async function buildRoot(tree: DesignTree, ctx: Ctx, offset: number): Promise<FrameNode | null> {
+interface Built {
+  frame: FrameNode;
+  /** Put by tree.place rather than by the running offset. */
+  placed: boolean;
+}
+
+async function buildRoot(tree: DesignTree, ctx: Ctx, offset: number): Promise<Built | null> {
   const root = tree.root;
   const existing = ctx.options.updateById ? findByFitId(root.id) : null;
+  const place = placeOf(tree);
 
   const frame = (await makeNode(root, ctx)) as FrameNode | null;
   if (!frame) return null;
@@ -149,6 +157,11 @@ async function buildRoot(tree: DesignTree, ctx: Ctx, offset: number): Promise<Fr
     else parent.appendChild(frame);
     existing.remove();
     ctx.report.framesUpdated += 1;
+  } else if (place) {
+    frame.x = Math.round(place.x);
+    frame.y = Math.round(place.y);
+    figma.currentPage.appendChild(frame);
+    ctx.report.framesCreated += 1;
   } else {
     const centre = figma.viewport.center ?? { x: 0, y: 0 };
     frame.x = Math.round(centre.x - frame.width / 2) + offset;
@@ -158,7 +171,14 @@ async function buildRoot(tree: DesignTree, ctx: Ctx, offset: number): Promise<Fr
   }
 
   await addChildren(frame, root, ctx);
-  return frame;
+  return { frame, placed: existing === null && place !== null };
+}
+
+/** An existing frame's own position wins, so place is read only without one. */
+function placeOf(tree: DesignTree): Place | null {
+  const place = tree.place;
+  if (!place || !Number.isFinite(place.x) || !Number.isFinite(place.y)) return null;
+  return place;
 }
 
 /** The frame a previous run left behind, matched on pluginData.fitId. */

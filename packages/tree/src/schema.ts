@@ -21,6 +21,11 @@ export const viewportSchema = z.looseObject({
   h: z.number(),
 });
 
+export const placeSchema = z.looseObject({
+  x: z.number(),
+  y: z.number(),
+});
+
 export const sourceSchema = z.looseObject({
   kind: z.enum(['url', 'file']),
   ref: z.string(),
@@ -196,6 +201,7 @@ export const nodeSchema = z.looseObject({
 export const designTreeSchema = z.looseObject({
   version: z.literal(1),
   source: sourceSchema,
+  place: placeSchema.optional(),
   fonts: z.array(fontFaceSchema),
   assets: z.record(z.string(), assetSchema),
   tokens: z.array(tokenSchema),

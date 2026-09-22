@@ -14,6 +14,8 @@
 export interface DesignTree {
   version: 1;
   source: Source;
+  /** Where the root frame goes on the Figma page. Optional. */
+  place?: Place;
   fonts: FontFace[];
   assets: Record<string, Asset>;
   tokens: Token[];
@@ -33,6 +35,12 @@ export interface Source {
 export interface Viewport {
   w: number;
   h: number;
+}
+
+/** Figma canvas units, absolute. The plugin rounds them. */
+export interface Place {
+  x: number;
+  y: number;
 }
 
 /** One family the page used, with every weight it drew in. */
