@@ -12,6 +12,7 @@ export function validTree(): DesignTree {
       viewport: { w: 390, h: 844 },
     },
     page: 'Screens',
+    section: 'Onboarding',
     place: { x: 1200, y: -80 },
     fonts: [{ family: 'Plus Jakarta Sans', weights: [400, 600, 700] }],
     assets: {

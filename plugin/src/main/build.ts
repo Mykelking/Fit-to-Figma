@@ -78,8 +78,9 @@ export async function build(
     label: '',
   };
 
-  // One running offset per page, so trees on one page lay out beside each other.
+  // One running offset per section, or per page when a tree named no section.
   const offsets = new Map<string, number>();
+  const sections = new Map<string, SectionNode>();
   let named: PageNode | null = null;
   for (const tree of trees) {
     if (!tree || !tree.root) {
@@ -94,18 +95,25 @@ export async function build(
         page = pageNamed(tree.page);
         if (!named) named = page;
       }
-      const offset = offsets.get(page.id) ?? 0;
-      const built = await buildRoot(tree, ctx, page, offset);
+      const section =
+        typeof tree.section === 'string' && tree.section !== ''
+          ? sectionNamed(tree.section, page, sections)
+          : null;
+      const key = section ? section.id : page.id;
+      const offset = offsets.get(key) ?? 0;
+      const built = await buildRoot(tree, ctx, { page, section }, offset);
       if (built) {
         made.push(built.frame);
         // A placed tree sits where it asked to; it does not move the next one.
-        if (!built.placed) offsets.set(page.id, offset + built.frame.width + 120);
+        if (!built.placed) offsets.set(key, offset + built.frame.width + 120);
       }
     } catch (err) {
       report.warnings.push(ctx.label + ': ' + message(err));
     }
     report.assetsSkipped += ctx.assets.skipped;
   }
+
+  for (const section of sections.values()) fitSection(section, report);
 
   for (const w of tokens.warnings) report.warnings.push(w);
   report.tokensBound = tokens.bound;
@@ -137,6 +145,88 @@ function pageNamed(name: string): PageNode {
   const made = figma.createPage();
   made.name = name;
   return made;
+}
+
+/** The air a section keeps round the frames in it. */
+const SECTION_PAD = 80;
+
+/** The gap under everything on a page before a new section starts. */
+const SECTION_GAP = 240;
+
+/**
+ * The section of that name on the page, or a new one under everything already
+ * there. One build looks each name up once, hence the cache.
+ */
+function sectionNamed(name: string, page: PageNode, cache: Map<string, SectionNode>): SectionNode {
+  const key = page.id + '\n' + name;
+  const known = cache.get(key);
+  if (known) return known;
+
+  for (const child of page.children) {
+    if (child.type === 'SECTION' && child.name === name) {
+      cache.set(key, child);
+      return child;
+    }
+  }
+
+  // Read the page before the new section is on it, or it would measure itself.
+  const start = under(page);
+  const made = figma.createSection();
+  made.name = name;
+  page.appendChild(made);
+  made.x = start.x;
+  made.y = start.y;
+  cache.set(key, made);
+  return made;
+}
+
+/** Under the lowest thing on the page, lined up with the leftmost. */
+function under(page: PageNode): { x: number; y: number } {
+  let left = Number.POSITIVE_INFINITY;
+  let bottom = Number.NEGATIVE_INFINITY;
+  for (const child of page.children) {
+    const box = child as SceneNode & { x: number; y: number; height: number };
+    if (!Number.isFinite(box.x) || !Number.isFinite(box.y)) continue;
+    left = Math.min(left, box.x);
+    bottom = Math.max(bottom, box.y + (Number.isFinite(box.height) ? box.height : 0));
+  }
+  if (!Number.isFinite(left)) return { x: 0, y: 0 };
+  return { x: left, y: bottom + SECTION_GAP };
+}
+
+/**
+ * A section is drawn round what is in it. The frames are shifted to sit at the
+ * padding and the section moves the other way by as much, so nothing on the
+ * page appears to move.
+ */
+function fitSection(section: SectionNode, report: BuildReport): void {
+  const children = section.children;
+  if (children.length === 0) return;
+  let left = Number.POSITIVE_INFINITY;
+  let top = Number.POSITIVE_INFINITY;
+  let right = Number.NEGATIVE_INFINITY;
+  let bottom = Number.NEGATIVE_INFINITY;
+  for (const child of children) {
+    left = Math.min(left, child.x);
+    top = Math.min(top, child.y);
+    right = Math.max(right, child.x + child.width);
+    bottom = Math.max(bottom, child.y + child.height);
+  }
+  if (!Number.isFinite(left) || !Number.isFinite(top)) return;
+
+  try {
+    const dx = SECTION_PAD - left;
+    const dy = SECTION_PAD - top;
+    for (const child of children) {
+      child.x += dx;
+      child.y += dy;
+    }
+    section.x -= dx;
+    section.y -= dy;
+    section.resizeWithoutConstraints(right - left + SECTION_PAD * 2, bottom - top + SECTION_PAD * 2);
+  } catch (err) {
+    report.warnings.push('section ' + section.name + ': ' + message(err));
+  }
 }
 
 /** A frame on another page can be neither selected nor scrolled into view. */
@@ -172,8 +262,15 @@ interface Built {
   placed: boolean;
 }
 
-async function buildRoot(tree: DesignTree, ctx: Ctx, page: PageNode, offset: number): Promise<Built | null> {
+/** Where a tree's root frame goes: a page, and a section on it when it named one. */
+interface Target {
+  page: PageNode;
+  section: SectionNode | null;
+}
+
+async function buildRoot(tree: DesignTree, ctx: Ctx, target: Target, offset: number): Promise<Built | null> {
   const root = tree.root;
+  const { page, section } = target;
   const existing = ctx.options.updateById ? findByFitId(root.id, page) : null;
   const place = placeOf(tree);
 
@@ -192,6 +289,13 @@ async function buildRoot(tree: DesignTree, ctx: Ctx, page: PageNode, offset: num
     else parent.appendChild(frame);
     existing.remove();
     ctx.report.framesUpdated += 1;
+  } else if (section) {
+    // Inside a section the numbers are the section's own, and the section is
+    // drawn round its frames once the run is over.
+    frame.x = place ? Math.round(place.x) : offset;
+    frame.y = place ? Math.round(place.y) : 0;
+    section.appendChild(frame);
+    ctx.report.framesCreated += 1;
   } else if (place) {
     frame.x = Math.round(place.x);
     frame.y = Math.round(place.y);
@@ -216,9 +320,23 @@ function placeOf(tree: DesignTree): Place | null {
   return place;
 }
 
-/** The frame a previous run left behind on that page, matched on pluginData.fitId. */
+/**
+ * The frame a previous run left behind on that page, matched on pluginData.fitId,
+ * whether it sits on the page itself or in one of its sections.
+ */
 function findByFitId(id: string, page: PageNode = figma.currentPage): FrameNode | null {
+  const top = frameWithId(page.children, id);
+  if (top) return top;
   for (const child of page.children) {
+    if (child.type !== 'SECTION') continue;
+    const inside = frameWithId(child.children, id);
+    if (inside) return inside;
+  }
+  return null;
+}
+
+function frameWithId(children: readonly SceneNode[], id: string): FrameNode | null {
+  for (const child of children) {
     if (child.type !== 'FRAME') continue;
     try {
       if (child.getPluginData('fitId') === id) return child;

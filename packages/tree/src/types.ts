@@ -16,6 +16,8 @@ export interface DesignTree {
   source: Source;
   /** The Figma page the root frame goes on, by name. Optional. */
   page?: string;
+  /** The section on that page the root frame goes in, by name. Optional. */
+  section?: string;
   /** Where the root frame goes on the Figma page. Optional. */
   place?: Place;
   fonts: FontFace[];

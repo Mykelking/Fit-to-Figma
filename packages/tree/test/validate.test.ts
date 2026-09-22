@@ -169,6 +169,12 @@ describe('validateTree', () => {
     expect(validateTree(put(clone(validTree()), 'page', 2)).ok).toBe(false);
   });
 
+  it('section is optional and refuses an empty name', () => {
+    expect(validateTree(drop(clone(validTree()), 'section')).ok).toBe(true);
+    expect(validateTree(put(clone(validTree()), 'section', 'Onboarding')).ok).toBe(true);
+    expect(validateTree(put(clone(validTree()), 'section', '')).ok).toBe(false);
+  });
+
   it('place is optional and takes two numbers', () => {
     expect(validateTree(drop(clone(validTree()), 'place')).ok).toBe(true);
     expect(validateTree(put(clone(validTree()), 'place', { x: -40.5, y: 0 })).ok).toBe(true);

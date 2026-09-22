@@ -156,6 +156,17 @@ export class FakeFrame extends FakeContainer {
   svg: string | null = null;
 }
 
+export class FakeSection extends FakeContainer {
+  override type = 'SECTION';
+
+  /** A section resizes with no say from its children, and never to nothing. */
+  resizeWithoutConstraints(w: number, h: number): void {
+    if (!(w > 0) || !(h > 0)) throw new Error('a section needs positive numbers');
+    this.width = w;
+    this.height = h;
+  }
+}
+
 export class FakeRectangle extends FakeNode {
   override type = 'RECTANGLE';
 }
@@ -281,6 +292,8 @@ export class FakeFile {
   readonly page = new FakePage(this);
   /** Every page in the file, the first one being the one a run starts on. */
   readonly pages: FakePage[] = [this.page];
+  /** Every section made in this file, in the order they were made. */
+  readonly sections: FakeSection[] = [];
   readonly loadedFonts: Array<{ family: string; style: string }> = [];
   readonly images: Array<{ hash: string; bytes: Uint8Array }> = [];
   readonly collections: FakeCollection[] = [];
@@ -370,6 +383,12 @@ export class FakeFile {
       createFrame(): FakeFrame {
         file.breakIfAsked('frame');
         return new FakeFrame(file);
+      },
+      createSection(): FakeSection {
+        const made = new FakeSection(file);
+        made.name = 'Section ' + (file.sections.length + 1);
+        file.sections.push(made);
+        return made;
       },
       createRectangle(): FakeRectangle {
         file.breakIfAsked('rectangle');

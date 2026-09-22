@@ -203,6 +203,7 @@ export const designTreeSchema = z.looseObject({
   version: z.literal(1),
   source: sourceSchema,
   page: z.string().min(1).optional(),
+  section: z.string().min(1).optional(),
   place: placeSchema.optional(),
   fonts: z.array(fontFaceSchema),
   assets: z.record(z.string(), assetSchema),
