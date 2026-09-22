@@ -11,6 +11,7 @@ Version 1. JSON. Positions in CSS pixels, relative to the root frame.
 {
   "version": 1,
   "source": { "kind": "url" | "file", "ref": "https://…", "title": "…", "capturedAt": "RFC 3339", "viewport": { "w": 390, "h": 844 } },
+  "page": "Screens",                         // optional: the Figma page the root frame goes on
   "place": { "x": 0, "y": 0 },               // optional: where the root frame goes on the page
   "fonts": [ { "family": "Plus Jakarta Sans", "weights": [400, 600, 700] } ],
   "assets": { "<id>": { "type": "image" | "svg", "mime": "image/png", "data": "<base64 or svg markup>", "w": 0, "h": 0 } },
@@ -45,6 +46,7 @@ A Node:
   "text": {                                  // text only
     "content": "Join",
     "font": { "family": "…", "weight": 700, "style": "normal" | "italic", "size": 16, "lineHeight": 24, "letterSpacing": 0 },
+    "lines": 1,                              // optional: line boxes the browser drew this run on
     "color": "#…", "opacity": 1,
     "align": "left" | "center" | "right",
     "decoration": "none" | "underline" | "strike",
@@ -61,7 +63,9 @@ What the shapes above leave unsaid:
 - A `shadow` is a drop shadow; an `inner-shadow` is the same thing drawn inside the box, which is CSS `inset` and what Figma calls an inner shadow.
 - A gradient `stop`'s `at` runs 0 to 1 along the gradient line, not 0 to 100.
 - A linear paint's `angle` is degrees clockwise from "to top", the same reading CSS uses: 0 points up, 90 points right, 180 points down. A CSS corner keyword becomes the 45 degree diagonal, because a corner in CSS follows the box's shape and Figma's angle does not.
+- `page` is the name of the Figma page the root frame goes on, and it is optional. The plugin takes the first page with that name, or makes one; a tree without it builds on the page you are looking at. When a run names pages it leaves you on the first one named.
 - `place` is where the root frame goes on the Figma page, in Figma canvas units, absolute, and it is optional. A tree without it is laid out beside the last one, from the centre of the view. The plugin rounds both numbers, and it ignores `place` when it is updating an existing frame in place: the frame already on the page keeps its position.
+- `lines` is how many line boxes the browser drew a run on, and it is optional. Figma's metrics are not the browser's, so a run drawn on one line is told to size itself rather than wrap; a run that wrapped keeps its width and grows downwards. Without it the plugin reads the run's height against its line height.
 - A token's `value` is always the string the page held; `kind` says how to read it.
 - `layout`, `sizing`, `strokes`, `text` and `semantic` are each optional, but when one is present every field in it is there.
 - An `image` or a `vector` node always has an `asset`, and a `text` node always has `text`. Nothing else is made compulsory by a node's `type`.
@@ -78,6 +82,8 @@ Rules the extractor keeps:
 
 One file can hold many trees: a JSON array of whole trees, by convention named
 `.trees.json`. The plugin builds them in order and does not read the extension.
+The Tree tab takes many such files in one drop and builds them one file at a
+time, so a whole design arrives in a single go.
 
 Rules the plugin keeps:
 

@@ -1,5 +1,6 @@
 import type { DesignTree } from '@fit-to-figma/tree';
-import type { BuildReport, MainToUi, UiToMain } from '../shared/messages.js';
+import type { Batch, BuildReport, MainToUi, UiToMain } from '../shared/messages.js';
+import { emptyReport } from '../shared/messages.js';
 import { treesFromHtml } from './render.js';
 import { checkTrees } from './validate.js';
 import type { TreeProblem } from './validate.js';
@@ -34,9 +35,15 @@ const el = {
 };
 
 let way: Way = 'tree';
-let loadedTrees: DesignTree[] = [];
+/** The dropped files themselves: a batch is read one file at a time, twice. */
+let loadedFiles: File[] = [];
 let loadedName = '';
 let busy = false;
+/** Set while one build is in flight, so the next file waits for it. */
+let waiting: { done: (report: BuildReport) => void; failed: (text: string) => void } | null = null;
+let atFile = 0;
+let atName = '';
+let ofFiles = 1;
 
 // ------------------------------------------------------------------ the ways
 
@@ -51,23 +58,41 @@ function setWay(next: Way): void {
   clearOut();
 }
 
-// 1. Drop a tree, or a file holding an array of them.
-dropTarget(el.treeDrop, el.treeFile, async (file) => {
-  // checkTrees parses the text once and reports where each tree goes wrong.
-  const checked = checkTrees(await file.text());
-  el.treeName.textContent = file.name;
-  if (!checked.ok) {
-    loadedTrees = [];
-    fail(count(checked.errors.length, 'problem') + ' in the tree.', checked.errors);
-    return;
+// 1. Drop a tree, a file holding an array of them, or a folder's worth of files.
+dropTarget(el.treeDrop, el.treeFile, async (files) => {
+  loadedFiles = [];
+  const only = files.length === 1 ? files[0] : undefined;
+  loadedName = only ? only.name : '';
+  el.treeName.textContent = only ? only.name : count(files.length, 'file');
+  // Each file is read, checked and let go again: only the counts are kept, so a
+  // drop of fifty files never holds more than one file's trees at a time.
+  let trees = 0;
+  for (const file of files) {
+    // checkTrees parses the text once and reports where each tree goes wrong.
+    const checked = checkTrees(await file.text());
+    if (!checked.ok) {
+      fail(problems(checked.errors.length, only ? 'the tree' : file.name), checked.errors);
+      return;
+    }
+    trees += checked.trees.length;
   }
-  loadedTrees = checked.trees;
-  loadedName = file.name;
-  note(checked.trees.length === 1 ? loadedName + ' reads clean.' : count(checked.trees.length, 'tree') + ' read clean.');
+  loadedFiles = files;
+  note(readClean(files.length, trees));
 });
 
+function readClean(files: number, trees: number): string {
+  if (files > 1) return count(files, 'file') + ' read clean, ' + trees.toLocaleString('en-US') + ' trees.';
+  return trees === 1 ? loadedName + ' reads clean.' : count(trees, 'tree') + ' read clean.';
+}
+
+function problems(n: number, where: string): string {
+  return count(n, 'problem') + ' in ' + where + '.';
+}
+
 // 2. Drop or paste HTML.
-dropTarget(el.htmlDrop, el.htmlFile, async (file) => {
+dropTarget(el.htmlDrop, el.htmlFile, async (files) => {
+  const file = files[0];
+  if (!file) return;
   el.htmlText.value = await file.text();
   loadedName = file.name;
   note(file.name + ' loaded.');
@@ -111,16 +136,8 @@ async function run(): Promise<void> {
   el.go.disabled = true;
   clearOut();
   try {
-    const trees = await gather();
-    if (!trees || trees.length === 0) return;
-    el.bar.hidden = false;
-    setBar(0, 1);
-    note('Building.');
-    post({
-      type: 'build',
-      trees,
-      options: { bindVariables: el.bind.checked, updateById: el.update.checked },
-    });
+    if (way === 'tree') await buildFiles();
+    else await buildTrees(await gather());
   } catch (err) {
     fail(message(err));
   } finally {
@@ -129,15 +146,56 @@ async function run(): Promise<void> {
   }
 }
 
-async function gather(): Promise<DesignTree[] | null> {
-  if (way === 'tree') {
-    if (loadedTrees.length === 0) {
-      fail('Drop a tree first.');
-      return null;
+/**
+ * One build message per file, the next file read only once the last is done, so
+ * at most one file's trees are in memory here or on the main thread.
+ */
+async function buildFiles(): Promise<void> {
+  if (loadedFiles.length === 0) {
+    fail('Drop a tree first.');
+    return;
+  }
+  const files = loadedFiles;
+  const many = files.length > 1;
+  const sum = emptyReport();
+  startBar(files.length);
+
+  for (let i = 0; i < files.length; i += 1) {
+    const file = files[i];
+    if (!file) continue;
+    atFile = i;
+    atName = file.name;
+    setBar(i, files.length);
+    note(many ? 'Reading ' + file.name + ' (' + (i + 1) + ' of ' + files.length + ').' : 'Building.');
+    const checked = checkTrees(await file.text());
+    if (!checked.ok) {
+      fail(problems(checked.errors.length, many ? file.name : 'the tree'), checked.errors);
+      return;
     }
-    return loadedTrees;
+    const batch: Batch | undefined = many ? { index: i, total: files.length } : undefined;
+    const report = await send({ type: 'build', trees: checked.trees, options: chosen(), batch });
+    if (many) addLine(file.name + ': ' + added(report));
+    merge(sum, report);
   }
 
+  el.bar.hidden = true;
+  showReport(sum);
+}
+
+async function buildTrees(trees: DesignTree[] | null): Promise<void> {
+  if (!trees || trees.length === 0) return;
+  startBar(1);
+  note('Building.');
+  const report = await send({ type: 'build', trees, options: chosen() });
+  el.bar.hidden = true;
+  showReport(report);
+}
+
+function chosen(): { bindVariables: boolean; updateById: boolean } {
+  return { bindVariables: el.bind.checked, updateById: el.update.checked };
+}
+
+async function gather(): Promise<DesignTree[] | null> {
   if (way === 'html') {
     const html = el.htmlText.value.trim();
     if (html === '') {
@@ -200,27 +258,68 @@ function post(msg: UiToMain): void {
   parent.postMessage({ pluginMessage: msg }, '*');
 }
 
+/** Posts one build and settles when the main thread answers for it. */
+function send(msg: UiToMain): Promise<BuildReport> {
+  return new Promise<BuildReport>((resolve, reject) => {
+    waiting = {
+      done: (report) => {
+        waiting = null;
+        resolve(report);
+      },
+      failed: (text) => {
+        waiting = null;
+        reject(new Error(text));
+      },
+    };
+    post(msg);
+  });
+}
+
 window.addEventListener('message', (event: MessageEvent) => {
   const msg = (event.data as { pluginMessage?: MainToUi } | undefined)?.pluginMessage;
   if (!msg) return;
   if (msg.type === 'progress') {
-    setBar(msg.done, msg.total);
-    note(msg.done + ' of ' + msg.total + ' nodes');
+    // The bar runs across the whole drop: this file's share, plus the ones done.
+    setBar(atFile + (msg.total > 0 ? msg.done / msg.total : 0), ofFiles);
+    note((ofFiles > 1 ? atName + ' - ' : '') + msg.done + ' of ' + msg.total + ' nodes');
     return;
   }
   if (msg.type === 'failed') {
     el.bar.hidden = true;
-    fail(msg.message);
+    waiting?.failed(msg.message);
     return;
   }
   if (msg.type === 'done') {
-    setBar(1, 1);
-    el.bar.hidden = true;
-    showReport(msg.report);
+    setBar(atFile + 1, ofFiles);
+    waiting?.done(msg.report);
   }
 });
 
 // ------------------------------------------------------------------ output
+
+/** One line per file of a batch, while the totals wait for the end. */
+function added(r: BuildReport): string {
+  const line = count(r.framesCreated, 'frame') + ' added';
+  return r.framesUpdated > 0 ? line + ', ' + count(r.framesUpdated, 'frame') + ' updated.' : line + '.';
+}
+
+/** A batch's report is its files' reports added up. */
+function merge(sum: BuildReport, r: BuildReport): void {
+  sum.nodes += r.nodes;
+  sum.frames += r.frames;
+  sum.texts += r.texts;
+  sum.images += r.images;
+  sum.vectors += r.vectors;
+  sum.framesCreated += r.framesCreated;
+  sum.framesUpdated += r.framesUpdated;
+  sum.assetsSkipped += r.assetsSkipped;
+  sum.tokensBound += r.tokensBound;
+  if (r.tokens !== 'none') sum.tokens = r.tokens;
+  for (const family of r.fontsMissing) {
+    if (sum.fontsMissing.indexOf(family) < 0) sum.fontsMissing.push(family);
+  }
+  for (const w of r.warnings) sum.warnings.push(w);
+}
 
 function showReport(r: BuildReport): void {
   // The extractor's own warnings are already in here; the build adds to them.
@@ -265,6 +364,14 @@ function clearOut(): void {
   el.bar.hidden = true;
 }
 
+function startBar(files: number): void {
+  atFile = 0;
+  atName = '';
+  ofFiles = files;
+  el.bar.hidden = false;
+  setBar(0, files);
+}
+
 function setBar(done: number, total: number): void {
   const pct = total > 0 ? Math.min(100, Math.round((done / total) * 100)) : 0;
   el.barFill.style.width = pct + '%';
@@ -280,11 +387,11 @@ function message(err: unknown): string {
 
 // ------------------------------------------------------------------ dropping
 
-function dropTarget(zone: HTMLElement, input: HTMLInputElement, take: (file: File) => Promise<void>): void {
+function dropTarget(zone: HTMLElement, input: HTMLInputElement, take: (files: File[]) => Promise<void>): void {
   zone.addEventListener('click', () => input.click());
   input.addEventListener('change', () => {
-    const file = input.files && input.files[0];
-    if (file) void take(file);
+    const files = input.files ? Array.from(input.files) : [];
+    if (files.length > 0) void take(files);
   });
   for (const name of ['dragenter', 'dragover']) {
     zone.addEventListener(name, (e) => {
@@ -297,8 +404,9 @@ function dropTarget(zone: HTMLElement, input: HTMLInputElement, take: (file: Fil
   }
   zone.addEventListener('drop', (e) => {
     e.preventDefault();
-    const file = (e as DragEvent).dataTransfer?.files?.[0];
-    if (file) void take(file);
+    const dropped = (e as DragEvent).dataTransfer?.files;
+    const files = dropped ? Array.from(dropped) : [];
+    if (files.length > 0) void take(files);
   });
 }
 

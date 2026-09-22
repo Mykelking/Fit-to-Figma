@@ -157,6 +157,7 @@ export const fontStyleSchema = z.looseObject({
 export const textStyleSchema = z.looseObject({
   content: z.string(),
   font: fontStyleSchema,
+  lines: z.number().int().min(1).optional(),
   color: hex6,
   opacity: unit,
   align: z.enum(['left', 'center', 'right']),
@@ -201,6 +202,7 @@ export const nodeSchema = z.looseObject({
 export const designTreeSchema = z.looseObject({
   version: z.literal(1),
   source: sourceSchema,
+  page: z.string().min(1).optional(),
   place: placeSchema.optional(),
   fonts: z.array(fontFaceSchema),
   assets: z.record(z.string(), assetSchema),

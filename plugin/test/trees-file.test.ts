@@ -21,6 +21,22 @@ describe('a dropped file of trees', () => {
     if (checked.ok) expect(checked.trees.map((t) => t.source.title)).toEqual(['a', 'b', 'c']);
   });
 
+  it('keeps page on the way through', () => {
+    const one = sample('a') as unknown as Record<string, unknown>;
+    one['page'] = 'Screens';
+    const checked = checkTrees(JSON.stringify([one]));
+    expect(checked.ok).toBe(true);
+    if (checked.ok) expect(checked.trees[0]?.page).toBe('Screens');
+  });
+
+  it('an empty page name is a problem, under its own index', () => {
+    const one = sample('a') as unknown as Record<string, unknown>;
+    one['page'] = '';
+    const checked = checkTrees(JSON.stringify([sample('ok'), one]));
+    expect(checked.ok).toBe(false);
+    if (!checked.ok) expect(checked.errors[0]?.path).toBe('[1].page');
+  });
+
   it('keeps place on the way through', () => {
     const one = sample('a') as unknown as Record<string, unknown>;
     one['place'] = { x: 40, y: -10 };

@@ -14,11 +14,11 @@ beforeEach(() => {
   file = installFigma({ fonts: { Inter: INTER, 'Plus Jakarta Sans': ['Regular', 'Bold', 'Bold Italic'] } });
 });
 
-function textNode(style: Record<string, unknown>, content = 'Join'): ReturnType<typeof node> {
+function textNode(style: Record<string, unknown>, content = 'Join', box = { w: 80, h: 24 }): ReturnType<typeof node> {
   return node({
     type: 'text',
-    w: 80,
-    h: 24,
+    w: box.w,
+    h: box.h,
     text: {
       content,
       font: { family: 'Plus Jakarta Sans', weight: 700, style: 'normal', size: 16, lineHeight: 24, letterSpacing: 0 },
@@ -32,9 +32,13 @@ function textNode(style: Record<string, unknown>, content = 'Join'): ReturnType<
   } as never);
 }
 
-async function buildText(style: Record<string, unknown>, content = 'Join'): Promise<FakeText> {
+async function buildText(
+  style: Record<string, unknown>,
+  content = 'Join',
+  box = { w: 80, h: 24 },
+): Promise<FakeText> {
   file = installFigma({ fonts: { Inter: INTER, 'Plus Jakarta Sans': ['Regular', 'Bold', 'Bold Italic'] } });
-  await build([tree(node({ type: 'frame', children: [textNode(style, content)] }))], options);
+  await build([tree(node({ type: 'frame', children: [textNode(style, content, box)] }))], options);
   return kids(file.page.children[0] as FakeFrame)[0] as FakeText;
 }
 
@@ -83,11 +87,9 @@ describe('text nodes', () => {
     expect((await buildText({ transform: 'lower' }, 'Join')).characters).toBe('join');
   });
 
-  it('paints the colour and keeps the box', async () => {
+  it('paints the colour', async () => {
     const text = await buildText({ color: '#9c4679' });
     expect(text.fills).toEqual([{ type: 'SOLID', color: { r: 156 / 255, g: 70 / 255, b: 121 / 255 }, opacity: 1 }]);
-    expect(text.textAutoResize).toBe('NONE');
-    expect([text.width, text.height]).toEqual([80, 24]);
   });
 
   it('falls back to Inter at the same weight and lists the family once', async () => {
@@ -123,6 +125,33 @@ describe('text nodes', () => {
   it('falls back to Regular when the family lacks the weight', async () => {
     const text = await buildText({ font: { family: 'Plus Jakarta Sans', weight: 300, style: 'normal', size: 12, lineHeight: 16, letterSpacing: 0 } });
     expect(text.fontName).toEqual({ family: 'Plus Jakarta Sans', style: 'Regular' });
+  });
+
+  it('a run the browser drew on one line sizes itself', async () => {
+    const text = await buildText({ lines: 1 });
+    expect(text.textAutoResize).toBe('WIDTH_AND_HEIGHT');
+  });
+
+  it('a run that wrapped keeps its width, with slack, and grows downwards', async () => {
+    const text = await buildText({ lines: 2 }, 'Two lines of this', { w: 80, h: 48 });
+    expect(text.textAutoResize).toBe('HEIGHT');
+    expect(text.width).toBe(82);
+  });
+
+  it('with no line count the box is read against the line height', async () => {
+    expect((await buildText({})).textAutoResize).toBe('WIDTH_AND_HEIGHT');
+    const tall = await buildText({}, 'Join', { w: 80, h: 72 });
+    expect(tall.textAutoResize).toBe('HEIGHT');
+  });
+
+  it('a centred run keeps its centre, a right aligned one its right edge', async () => {
+    // 'Join' at 16px measures 32 in the fake, in a box the page measured at 80.
+    const centred = await buildText({ lines: 1, align: 'center' });
+    expect(centred.x).toBe(24);
+    const right = await buildText({ lines: 1, align: 'right' });
+    expect(right.x).toBe(48);
+    const left = await buildText({ lines: 1 });
+    expect(left.x).toBe(0);
   });
 
   it('skips a text node with no text and reports it', async () => {

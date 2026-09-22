@@ -405,6 +405,7 @@ async function buildChildren(
           path: `${base}${run.key}`,
           content: run.content,
           box: run.box,
+          lines: run.lines,
           style,
           name: nameOf(el),
           clip: frame.clip,
@@ -472,6 +473,8 @@ interface TextNodeArgs {
   style: CSSStyleDeclaration;
   name: string;
   clip: Box;
+  /** Line boxes the run was drawn on, when something measured it. */
+  lines?: number;
 }
 
 /** A run of text, or nothing when the run is outside what can be seen. */
@@ -480,6 +483,9 @@ function textNode(args: TextNodeArgs): Node | null {
   if (!ctx.includeHidden && isEmpty(intersect(args.box, args.clip))) return null;
 
   const text = textStyleFor(args.content, style, ctx.viewport);
+  // The plugin needs to know a one line run from a wrapped one: Figma's metrics
+  // are not the browser's, and a line that only just fitted here would wrap there.
+  if (typeof args.lines === 'number' && args.lines >= 1) text.lines = Math.round(args.lines);
   ctx.fonts.seen(text.font);
 
   if (looksLikeIcon(args.content, text.font.family)) {

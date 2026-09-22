@@ -169,7 +169,7 @@ export class FakeText extends FakeNode {
   letterSpacing: unknown = { unit: 'PIXELS', value: 0 };
   textAlignHorizontal = 'LEFT';
   textDecoration = 'NONE';
-  textAutoResize = 'WIDTH_AND_HEIGHT';
+  private autoResize = 'WIDTH_AND_HEIGHT';
 
   constructor(
     file: FakeFile,
@@ -198,12 +198,67 @@ export class FakeText extends FakeNode {
       throw new Error('font ' + this.fontValue.family + ' is not loaded');
     }
     this.charsValue = value;
+    this.layOut();
+  }
+
+  get textAutoResize(): string {
+    return this.autoResize;
+  }
+
+  set textAutoResize(mode: string) {
+    this.autoResize = mode;
+    this.layOut();
+  }
+
+  override resize(w: number, h: number): void {
+    super.resize(w, h);
+    this.layOut();
+  }
+
+  /** Metrics crude enough to be wrong, exact enough to tell wrapping apart. */
+  private layOut(): void {
+    if (this.autoResize === 'NONE') return;
+    const line = this.lineHeightPx();
+    const run = Math.max(1, this.charsValue.length * this.fontSize * 0.5);
+    if (this.autoResize === 'WIDTH_AND_HEIGHT') {
+      this.width = run;
+      this.height = line;
+      return;
+    }
+    // HEIGHT: the width stands and the text takes as many lines as it needs.
+    this.height = Math.ceil(run / Math.max(1, this.width)) * line;
+  }
+
+  private lineHeightPx(): number {
+    const set = this.lineHeight as { unit?: string; value?: number };
+    return set && set.unit === 'PIXELS' && typeof set.value === 'number' ? set.value : this.fontSize * 1.2;
   }
 }
 
 export class FakePage extends FakeContainer {
   override type = 'PAGE';
-  selection: FakeNode[] = [];
+  private selected: FakeNode[] = [];
+
+  get selection(): FakeNode[] {
+    return this.selected;
+  }
+
+  /** Figma refuses a selection that is not on this page, and so does the fake. */
+  set selection(nodes: FakeNode[]) {
+    for (const node of nodes) {
+      if (pageOf(node) !== this) throw new Error('a node on another page cannot be selected');
+    }
+    this.selected = nodes;
+  }
+}
+
+function pageOf(node: FakeNode): FakePage | null {
+  let at: FakeNode | null = node;
+  while (at) {
+    if (at instanceof FakePage) return at;
+    at = at.parent;
+  }
+  return null;
 }
 
 export interface FakeVariable {
@@ -224,6 +279,8 @@ export interface FakeCollection {
 export class FakeFile {
   readonly byId = new Map<string, FakeNode>();
   readonly page = new FakePage(this);
+  /** Every page in the file, the first one being the one a run starts on. */
+  readonly pages: FakePage[] = [this.page];
   readonly loadedFonts: Array<{ family: string; style: string }> = [];
   readonly images: Array<{ hash: string; bytes: Uint8Array }> = [];
   readonly collections: FakeCollection[] = [];
@@ -232,6 +289,7 @@ export class FakeFile {
   made = 0;
 
   constructor(readonly options: FakeOptions = {}) {
+    this.page.name = 'Page 1';
     this.available = options.fonts ?? {
       Inter: ['Thin', 'Light', 'Regular', 'Medium', 'Semi Bold', 'Bold', 'Black', 'Italic', 'Bold Italic'],
     };
@@ -285,14 +343,29 @@ export class FakeFile {
       },
     };
 
+    let current = file.page;
     const api = {
-      root: { children: [file.page] },
-      currentPage: file.page,
+      root: { children: file.pages },
+      get currentPage(): FakePage {
+        return current;
+      },
+      set currentPage(page: FakePage) {
+        current = page;
+      },
       viewport: {
         center: { x: 0, y: 0 },
-        scrollAndZoomIntoView(): void {
-          /* nothing to scroll in a fake */
+        scrollAndZoomIntoView(nodes: FakeNode[]): void {
+          // Figma throws on a node that is not on the page you are looking at.
+          for (const node of nodes) {
+            if (pageOf(node) !== current) throw new Error('that node is on another page');
+          }
         },
+      },
+      createPage(): FakePage {
+        const made = new FakePage(file);
+        made.name = 'Page ' + (file.pages.length + 1);
+        file.pages.push(made);
+        return made;
       },
       createFrame(): FakeFrame {
         file.breakIfAsked('frame');

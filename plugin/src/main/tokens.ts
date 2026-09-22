@@ -1,5 +1,5 @@
 import type { Token } from '@fit-to-figma/tree';
-import { hexToRgb, looksLikeColour, normaliseHex } from './colour.js';
+import { clamp01, hexAlpha, hexToRgb, looksLikeColour, normaliseHex } from './colour.js';
 
 export type TokenTarget = 'variables' | 'styles' | 'none';
 
@@ -40,10 +40,11 @@ export class TokenStore {
     const api = figma.variables as typeof figma.variables | undefined;
     if (!api || typeof api.createVariableCollection !== 'function') return false;
     try {
-      const collection = api.createVariableCollection(this.sourceName);
+      const collection = this.collectionNamed(api) ?? api.createVariableCollection(this.sourceName);
+      const already = this.variablesIn(api, collection);
       for (const token of colours) {
         try {
-          const variable = api.createVariable(token.name, collection, 'COLOR');
+          const variable = already.get(token.name) ?? api.createVariable(token.name, collection, 'COLOR');
           const mode = collection.modes[0];
           if (mode) variable.setValueForMode(mode.modeId, hexToRgb(token.value));
           this.byColour.set(normaliseHex(token.value), { variable });
@@ -58,12 +59,45 @@ export class TokenStore {
     }
   }
 
+  /** A run per file still writes one collection: the name is looked up first. */
+  private collectionNamed(api: typeof figma.variables): VariableCollection | null {
+    const list = (api as { getLocalVariableCollections?: () => VariableCollection[] })
+      .getLocalVariableCollections;
+    if (typeof list !== 'function') return null;
+    try {
+      for (const collection of list.call(api)) {
+        if (collection.name === this.sourceName) return collection;
+      }
+    } catch {
+      // A file that will not list its collections gets a new one.
+    }
+    return null;
+  }
+
+  /** What that collection already holds, by name, so a second file adds to it. */
+  private variablesIn(api: typeof figma.variables, collection: VariableCollection): Map<string, Variable> {
+    const out = new Map<string, Variable>();
+    const get = (api as { getVariableById?: (id: string) => Variable | null }).getVariableById;
+    if (typeof get !== 'function') return out;
+    try {
+      for (const id of collection.variableIds ?? []) {
+        const variable = get.call(api, id);
+        if (variable) out.set(variable.name, variable);
+      }
+    } catch {
+      // Same again: what cannot be read is made afresh.
+    }
+    return out;
+  }
+
   private tryStyles(colours: Token[]): boolean {
     if (typeof figma.createPaintStyle !== 'function') return false;
     try {
+      const already = this.stylesByName();
       for (const token of colours) {
-        const style = figma.createPaintStyle();
-        style.name = this.sourceName + '/' + token.name.replace(/^--/, '');
+        const name = this.sourceName + '/' + token.name.replace(/^--/, '');
+        const style = already.get(name) ?? figma.createPaintStyle();
+        style.name = name;
         style.paints = [{ type: 'SOLID', color: hexToRgb(token.value) }];
         this.byColour.set(normaliseHex(token.value), { style });
       }
@@ -73,6 +107,19 @@ export class TokenStore {
     } catch {
       return false;
     }
+  }
+
+  /** The styles this file already has, so a second file rewrites them. */
+  private stylesByName(): Map<string, PaintStyle> {
+    const out = new Map<string, PaintStyle>();
+    const list = (figma as { getLocalPaintStyles?: () => PaintStyle[] }).getLocalPaintStyles;
+    if (typeof list !== 'function') return out;
+    try {
+      for (const style of list.call(figma)) out.set(style.name, style);
+    } catch {
+      // A file that will not list its styles gets new ones.
+    }
+    return out;
   }
 
   /**
@@ -97,6 +144,11 @@ export class TokenStore {
       return { paint };
     }
     if (entry.style) {
+      // A paint style replaces the layer's paint outright, opacity with it, so
+      // a scrim bound to one would come out solid. There the colour stays
+      // literal. A variable binds the colour alone and keeps the opacity.
+      if (clamp01(paint.opacity === undefined ? 1 : paint.opacity) < 1) return { paint };
+      if (hexAlpha(hex) < 1) return { paint };
       this.bound += 1;
       return { paint, styleId: entry.style.id };
     }

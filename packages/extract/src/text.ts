@@ -20,6 +20,8 @@ export interface TextRun {
   /** The text as the DOM holds it. `text-transform` travels separately. */
   content: string;
   box: Box;
+  /** Line boxes the browser drew the run on; 0 when nothing could measure it. */
+  lines: number;
   /** A stable suffix for the run's id: which child node it started at. */
   key: string;
 }
@@ -57,8 +59,8 @@ export function directRuns({ el, origin, view, warnings, nodeId }: RunArgs): Tex
     if (group.length === 0) return;
     const content = collapse(group.map((node) => node.nodeValue ?? '').join(''), whiteSpace);
     if (content.trim().length > 0) {
-      const box = boxOfNodes(group, origin, view, warnings, nodeId, el);
-      if (box) runs.push({ content, box, key: `#t${groupStart}` });
+      const drawn = boxOfNodes(group, origin, view, warnings, nodeId, el);
+      if (drawn) runs.push({ content, box: drawn.box, lines: drawn.lines, key: `#t${groupStart}` });
     }
     group = [];
   };
@@ -91,7 +93,7 @@ function boxOfNodes(
   warnings: Warnings,
   nodeId: string,
   el: Element,
-): Box | null {
+): { box: Box; lines: number } | null {
   const first = nodes[0];
   const last = nodes[nodes.length - 1];
   if (!first || !last) return null;
@@ -110,7 +112,7 @@ function boxOfNodes(
         { node: nodeId },
       );
     }
-    return measured.box;
+    return { box: measured.box, lines: measured.lines };
   }
 
   warnings.add(
@@ -120,7 +122,8 @@ function boxOfNodes(
   );
   const rect = el.getBoundingClientRect();
   const box = boxFromRect(rect, origin);
-  return isEmpty(box) ? null : box;
+  // Nothing measured it, so nothing is claimed about how many lines it took.
+  return isEmpty(box) ? null : { box, lines: 0 };
 }
 
 interface Measured {

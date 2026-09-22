@@ -157,6 +157,18 @@ describe('validateTree', () => {
     expect(validateTree(tree).ok).toBe(false);
   });
 
+  it('page is optional and is the name of a Figma page', () => {
+    expect(validateTree(drop(clone(validTree()), 'page')).ok).toBe(true);
+    expect(validateTree(put(clone(validTree()), 'page', 'Sign up')).ok).toBe(true);
+  });
+
+  it('page refuses an empty name and a number', () => {
+    const empty = validateTree(put(clone(validTree()), 'page', ''));
+    expect(empty.ok).toBe(false);
+    if (!empty.ok) expect(empty.errors.map((issue) => issue.path)).toContain('page');
+    expect(validateTree(put(clone(validTree()), 'page', 2)).ok).toBe(false);
+  });
+
   it('place is optional and takes two numbers', () => {
     expect(validateTree(drop(clone(validTree()), 'place')).ok).toBe(true);
     expect(validateTree(put(clone(validTree()), 'place', { x: -40.5, y: 0 })).ok).toBe(true);

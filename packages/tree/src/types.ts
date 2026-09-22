@@ -14,6 +14,8 @@
 export interface DesignTree {
   version: 1;
   source: Source;
+  /** The Figma page the root frame goes on, by name. Optional. */
+  page?: string;
   /** Where the root frame goes on the Figma page. Optional. */
   place?: Place;
   fonts: FontFace[];
@@ -214,6 +216,8 @@ export type TextTransform = 'none' | 'upper' | 'lower';
 export interface TextStyle {
   content: string;
   font: FontStyle;
+  /** How many lines the browser drew this run on. Optional. */
+  lines?: number;
   color: string;
   opacity: number;
   align: TextAlign;

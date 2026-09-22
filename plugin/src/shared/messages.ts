@@ -7,6 +7,14 @@ export interface BuildOptions {
   updateById: boolean;
   /** Nodes made between yields to the event loop. */
   batchSize?: number;
+  /** The variable collection tokens go into. Unset names it after the source. */
+  collection?: string;
+}
+
+/** Which file of a many file drop this message is about. Unset means the only one. */
+export interface Batch {
+  index: number;
+  total: number;
 }
 
 export interface BuildReport {
@@ -27,14 +35,14 @@ export interface BuildReport {
 }
 
 export type UiToMain =
-  | { type: 'build'; trees: DesignTree[]; options: BuildOptions }
+  | { type: 'build'; trees: DesignTree[]; options: BuildOptions; batch?: Batch }
   | { type: 'cancel' }
   | { type: 'close' }
   | { type: 'resize'; height: number };
 
 export type MainToUi =
   | { type: 'progress'; done: number; total: number; label: string }
-  | { type: 'done'; report: BuildReport }
+  | { type: 'done'; report: BuildReport; batch?: Batch }
   | { type: 'failed'; message: string };
 
 export function emptyReport(): BuildReport {

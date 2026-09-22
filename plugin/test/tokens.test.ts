@@ -67,6 +67,31 @@ describe('colour tokens', () => {
     expect(report.warnings.join(' ')).toContain('paint styles');
   });
 
+  function scrim() {
+    return tree(node({ type: 'frame', fills: [{ type: 'solid', color: '#9c4679', opacity: 0.48 }] }), {
+      tokens: TOKENS,
+    });
+  }
+
+  it('a see-through colour keeps its own paint rather than taking a style', async () => {
+    file = installFigma({ variables: false });
+    const report = await build([scrim()], { bindVariables: true, updateById: false });
+    const frame = file.page.children[0] as FakeFrame;
+    // A paint style carries no per layer opacity: the style would draw it solid.
+    expect(frame.fillStyleId).toBe('');
+    expect((frame.fills as Array<Record<string, unknown>>)[0]?.opacity).toBe(0.48);
+    expect(report.tokensBound).toBe(0);
+  });
+
+  it('a variable binds the colour and leaves the opacity alone', async () => {
+    file = installFigma();
+    const report = await build([scrim()], { bindVariables: true, updateById: false });
+    const fill = ((file.page.children[0] as FakeFrame).fills as Array<Record<string, unknown>>)[0];
+    expect(fill?.boundVariables).toBeTruthy();
+    expect(fill?.opacity).toBe(0.48);
+    expect(report.tokensBound).toBe(1);
+  });
+
   it('carries on with neither variables nor styles', async () => {
     file = installFigma({ variables: false, paintStyles: false });
     const report = await build([withTokens()], { bindVariables: true, updateById: false });

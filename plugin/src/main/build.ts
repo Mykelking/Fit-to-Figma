@@ -60,7 +60,7 @@ export async function build(
   const total = trees.reduce((n, t) => n + (t.root ? countNodes(t.root) : 0), 0);
 
   const first = trees[0];
-  const collectionName = first ? sourceName(first) : 'Fit to Figma';
+  const collectionName = options.collection ?? (first ? sourceName(first) : 'Fit to Figma');
   const tokens = new TokenStore(collectionName, allTokens(trees));
   tokens.init(options.bindVariables === true);
   report.tokens = tokens.target;
@@ -78,7 +78,9 @@ export async function build(
     label: '',
   };
 
-  let offset = 0;
+  // One running offset per page, so trees on one page lay out beside each other.
+  const offsets = new Map<string, number>();
+  let named: PageNode | null = null;
   for (const tree of trees) {
     if (!tree || !tree.root) {
       report.warnings.push('a tree with no root was skipped');
@@ -86,12 +88,18 @@ export async function build(
     }
     ctx.assets = new AssetStore(tree.assets ?? {});
     ctx.label = sourceName(tree);
+    let page = figma.currentPage;
     try {
-      const built = await buildRoot(tree, ctx, offset);
+      if (typeof tree.page === 'string' && tree.page !== '') {
+        page = pageNamed(tree.page);
+        if (!named) named = page;
+      }
+      const offset = offsets.get(page.id) ?? 0;
+      const built = await buildRoot(tree, ctx, page, offset);
       if (built) {
         made.push(built.frame);
         // A placed tree sits where it asked to; it does not move the next one.
-        if (!built.placed) offset += built.frame.width + 120;
+        if (!built.placed) offsets.set(page.id, offset + built.frame.width + 120);
       }
     } catch (err) {
       report.warnings.push(ctx.label + ': ' + message(err));
@@ -103,15 +111,42 @@ export async function build(
   report.tokensBound = tokens.bound;
   report.fontsMissing = Array.from(fonts.missing).sort();
 
-  if (made.length > 0) {
-    figma.currentPage.selection = made;
+  // The page is switched once, at the end: switching per tree costs a redraw each.
+  if (named && named !== figma.currentPage) figma.currentPage = named;
+
+  const here = made.filter(onCurrentPage);
+  if (here.length > 0) {
+    figma.currentPage.selection = here;
     try {
-      figma.viewport.scrollAndZoomIntoView(made);
+      figma.viewport.scrollAndZoomIntoView(here);
     } catch {
       // A fake or a headless file may not have a viewport. Not worth a warning.
     }
   }
   return report;
+}
+
+/**
+ * The page with this name, or a new one. The manifest asks for no dynamic page
+ * access, so the pages and their children are all readable here and now.
+ */
+function pageNamed(name: string): PageNode {
+  for (const child of figma.root.children) {
+    if (child.name === name) return child;
+  }
+  const made = figma.createPage();
+  made.name = name;
+  return made;
+}
+
+/** A frame on another page can be neither selected nor scrolled into view. */
+function onCurrentPage(node: SceneNode): boolean {
+  let at: BaseNode | null = node;
+  while (at) {
+    if (at === figma.currentPage) return true;
+    at = at.parent;
+  }
+  return false;
 }
 
 function allTokens(trees: DesignTree[]): DesignTree['tokens'] {
@@ -137,9 +172,9 @@ interface Built {
   placed: boolean;
 }
 
-async function buildRoot(tree: DesignTree, ctx: Ctx, offset: number): Promise<Built | null> {
+async function buildRoot(tree: DesignTree, ctx: Ctx, page: PageNode, offset: number): Promise<Built | null> {
   const root = tree.root;
-  const existing = ctx.options.updateById ? findByFitId(root.id) : null;
+  const existing = ctx.options.updateById ? findByFitId(root.id, page) : null;
   const place = placeOf(tree);
 
   const frame = (await makeNode(root, ctx)) as FrameNode | null;
@@ -149,7 +184,7 @@ async function buildRoot(tree: DesignTree, ctx: Ctx, offset: number): Promise<Bu
   frame.setPluginData('fitSource', tree.source ? String(tree.source.ref) : '');
 
   if (existing) {
-    const parent = existing.parent ?? figma.currentPage;
+    const parent = existing.parent ?? page;
     const index = parent.children.indexOf(existing);
     frame.x = existing.x;
     frame.y = existing.y;
@@ -160,13 +195,13 @@ async function buildRoot(tree: DesignTree, ctx: Ctx, offset: number): Promise<Bu
   } else if (place) {
     frame.x = Math.round(place.x);
     frame.y = Math.round(place.y);
-    figma.currentPage.appendChild(frame);
+    page.appendChild(frame);
     ctx.report.framesCreated += 1;
   } else {
     const centre = figma.viewport.center ?? { x: 0, y: 0 };
     frame.x = Math.round(centre.x - frame.width / 2) + offset;
     frame.y = Math.round(centre.y - frame.height / 2);
-    figma.currentPage.appendChild(frame);
+    page.appendChild(frame);
     ctx.report.framesCreated += 1;
   }
 
@@ -181,9 +216,8 @@ function placeOf(tree: DesignTree): Place | null {
   return place;
 }
 
-/** The frame a previous run left behind, matched on pluginData.fitId. */
-function findByFitId(id: string): FrameNode | null {
-  const page = figma.currentPage;
+/** The frame a previous run left behind on that page, matched on pluginData.fitId. */
+function findByFitId(id: string, page: PageNode = figma.currentPage): FrameNode | null {
   for (const child of page.children) {
     if (child.type !== 'FRAME') continue;
     try {
@@ -206,6 +240,8 @@ async function addChildren(parent: FrameNode, node: TreeNode, ctx: Ctx): Promise
       if (absolute) {
         made.x = at(child.x) - at(node.x);
         made.y = at(child.y) - at(node.y);
+        // Text is placed before it is anchored: its width is its own by now.
+        if (made.type === 'TEXT') anchorText(made, child);
       }
       applySizing(made, child.sizing, !absolute, ctx);
       if (made.type === 'FRAME' && child.type === 'frame') {
@@ -378,9 +414,40 @@ async function makeText(node: TreeNode, ctx: Ctx): Promise<SceneNode | null> {
     if (bound.styleId !== undefined) text.fillStyleId = bound.styleId;
   }
 
-  text.textAutoResize = 'NONE';
-  text.resize(size(node.w), size(node.h));
+  fitText(text, node, style);
   return text;
+}
+
+/**
+ * Figma's metrics are not the browser's, so a line that only just fitted on the
+ * page wraps here and overlaps whatever is under it. A run the browser drew on
+ * one line sizes itself and never wraps; a run that wrapped keeps its measured
+ * width, with a pixel of slack each side, and grows downwards.
+ */
+function fitText(text: TextNode, node: TreeNode, style: TextStyle): void {
+  if (oneLine(node, style)) {
+    text.textAutoResize = 'WIDTH_AND_HEIGHT';
+    return;
+  }
+  text.textAutoResize = 'HEIGHT';
+  text.resize(size(node.w) + 2, size(node.h));
+}
+
+/** What the extractor measured, or the box read against the line height. */
+function oneLine(node: TreeNode, style: TextStyle): boolean {
+  const lines = style.lines;
+  if (typeof lines === 'number' && Number.isFinite(lines) && lines >= 1) return lines === 1;
+  const font = style.font;
+  const line = font && Number.isFinite(font.lineHeight) && font.lineHeight > 0 ? font.lineHeight : 0;
+  return line > 0 && size(node.h) <= line * 1.5;
+}
+
+/** A text layer that sized itself keeps the edge its alignment is measured from. */
+function anchorText(text: TextNode, node: TreeNode): void {
+  const align = node.text ? node.text.align : undefined;
+  if (align !== 'center' && align !== 'right') return;
+  const slack = size(node.w) - text.width;
+  text.x += align === 'center' ? Math.round(slack / 2) : Math.round(slack);
 }
 
 function transform(content: string, how: TextStyle['transform']): string {
