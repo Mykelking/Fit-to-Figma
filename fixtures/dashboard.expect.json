@@ -1,0 +1,302 @@
+{
+  "fixture": "dashboard.html",
+  "what": "1440 wide. Proves a fixed-width sidebar beside a filling main, a <table> (not flex, not grid) arriving as a frame with no auto layout, numeric cells in a second family, badges, one inline SVG with <defs>/<symbol>/<use> surviving as a single vector asset, and a modal over a scrim with backdrop blur.",
+  "viewport": {
+    "w": 1440
+  },
+  "counts": {
+    "frame": {
+      "min": 49,
+      "max": 53
+    },
+    "text": 33,
+    "image": 0,
+    "vector": 1
+  },
+  "assets": {
+    "image": 0,
+    "svg": 1
+  },
+  "fonts": [
+    {
+      "family": "Inter",
+      "weights": [
+        400,
+        600,
+        700
+      ]
+    },
+    {
+      "family": "JetBrains Mono",
+      "weights": [
+        400,
+        700
+      ]
+    }
+  ],
+  "tokens": [
+    {
+      "name": "--color-primary",
+      "value": "#9c4679",
+      "kind": "color"
+    },
+    {
+      "name": "--color-surface",
+      "value": "#ffffff",
+      "kind": "color"
+    },
+    {
+      "name": "--color-line",
+      "value": "#e4dfea",
+      "kind": "color"
+    }
+  ],
+  "mustExist": [
+    [
+      "div.app",
+      "frame"
+    ],
+    [
+      "aside.sidebar",
+      "frame"
+    ],
+    [
+      "Fit to Figma",
+      "text"
+    ],
+    [
+      "nav.side-nav",
+      "frame"
+    ],
+    [
+      "a.side-link.is-active",
+      "frame"
+    ],
+    [
+      "Overview",
+      "text"
+    ],
+    [
+      "main.main",
+      "frame"
+    ],
+    [
+      "Overview",
+      "text"
+    ],
+    [
+      "span.badge.badge--ok",
+      "frame"
+    ],
+    [
+      "span.badge.badge--warn",
+      "frame"
+    ],
+    [
+      "span.badge.badge--bad",
+      "frame"
+    ],
+    [
+      "section.chart-card",
+      "frame"
+    ],
+    [
+      "svg.chart",
+      "vector"
+    ],
+    [
+      "section.table-card",
+      "frame"
+    ],
+    [
+      "table.table",
+      "frame"
+    ],
+    [
+      "tr.head-row",
+      "frame"
+    ],
+    [
+      "th.col-page",
+      "frame"
+    ],
+    [
+      "th.col-num",
+      "frame"
+    ],
+    [
+      "tr.body-row",
+      "frame"
+    ],
+    [
+      "td.cell-page",
+      "frame"
+    ],
+    [
+      "td.cell-num",
+      "frame"
+    ],
+    [
+      "td.cell-state",
+      "frame"
+    ],
+    [
+      "div.scrim",
+      "frame"
+    ],
+    [
+      "div.modal",
+      "frame"
+    ],
+    [
+      "Capture this page",
+      "text"
+    ],
+    [
+      "div.modal-actions",
+      "frame"
+    ],
+    [
+      "button.btn.btn--primary",
+      "frame"
+    ],
+    [
+      "Page",
+      "text"
+    ],
+    [
+      "Live",
+      "text"
+    ]
+  ],
+  "mustNotExist": [],
+  "textNodes": [
+    "Fit to Figma",
+    "Overview",
+    "Captures",
+    "Tokens",
+    "Settings",
+    "Live",
+    "Captures per day",
+    "Recent captures",
+    "Page",
+    "Nodes",
+    "Assets",
+    "State",
+    "phone-screen.html",
+    "1032",
+    "Fallback font",
+    "Dropped 6",
+    "Capture this page",
+    "Cancel",
+    "Capture"
+  ],
+  "textNodesAbsent": [],
+  "assetContains": {
+    "svg": [
+      "<symbol",
+      "translate(40 196)",
+      "translate(60 120)",
+      "translate(900 20)"
+    ]
+  },
+  "nodes": {
+    "aside.sidebar": {
+      "layout": {
+        "mode": "column",
+        "gap": 24,
+        "padding": [
+          24,
+          16,
+          24,
+          16
+        ],
+        "align": "stretch",
+        "justify": "start",
+        "wrap": false
+      },
+      "sizing": {
+        "w": "fixed",
+        "h": "fill"
+      }
+    },
+    "table.table": {
+      "noLayout": true
+    },
+    "div.scrim": {
+      "effects": [
+        {
+          "type": "backdrop-blur",
+          "radius": 12
+        }
+      ],
+      "fillTypes": [
+        "solid"
+      ]
+    },
+    "div.modal": {
+      "radius": [
+        16,
+        16,
+        16,
+        16
+      ],
+      "effects": [
+        {
+          "type": "shadow",
+          "x": 0,
+          "y": 24,
+          "blur": 64,
+          "spread": 0,
+          "color": "#1b1820",
+          "opacity": 0.32
+        }
+      ]
+    },
+    "th.col-page": {
+      "noLayout": true
+    },
+    "Page": {
+      "text": {
+        "content": "Page",
+        "font": {
+          "family": "Inter",
+          "weight": 700,
+          "style": "normal",
+          "size": 12,
+          "lineHeight": 18,
+          "letterSpacing": 0
+        },
+        "color": "#6b6577",
+        "opacity": 1,
+        "align": "left",
+        "decoration": "none",
+        "transform": "none"
+      }
+    },
+    "span.badge.badge--ok": {
+      "radius": [
+        11,
+        11,
+        11,
+        11
+      ],
+      "layout": {
+        "mode": "row",
+        "gap": 0,
+        "padding": [
+          2,
+          10,
+          2,
+          10
+        ],
+        "align": "center",
+        "justify": "center",
+        "wrap": false
+      },
+      "fillTypes": [
+        "solid"
+      ]
+    }
+  }
+}

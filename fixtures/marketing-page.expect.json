@@ -1,0 +1,250 @@
+{
+  "fixture": "marketing-page.html",
+  "what": "1280 wide. Proves a CSS background image becoming an image asset carried as a fill, mixed inline runs (<b>, <a>) splitting into sibling text nodes, an equal-track three column grid becoming auto layout, a second font family, and a footer.",
+  "viewport": {
+    "w": 1280
+  },
+  "counts": {
+    "frame": {
+      "min": 16,
+      "max": 18
+    },
+    "text": 25,
+    "image": 0,
+    "vector": 0
+  },
+  "assets": {
+    "image": 1,
+    "svg": 0
+  },
+  "fonts": [
+    {
+      "family": "Inter",
+      "weights": [
+        400,
+        600,
+        700
+      ]
+    },
+    {
+      "family": "Playfair Display",
+      "weights": [
+        700
+      ]
+    }
+  ],
+  "tokens": [
+    {
+      "name": "--color-primary",
+      "value": "#9c4679",
+      "kind": "color"
+    },
+    {
+      "name": "--color-ink",
+      "value": "#1b1820",
+      "kind": "color"
+    }
+  ],
+  "mustExist": [
+    [
+      "div.page",
+      "frame"
+    ],
+    [
+      "section.hero",
+      "frame"
+    ],
+    [
+      "Every screen, in Figma, in one click.",
+      "text"
+    ],
+    [
+      "div.hero-actions",
+      "frame"
+    ],
+    [
+      "a.btn.btn--primary",
+      "frame"
+    ],
+    [
+      "a.btn.btn--ghost",
+      "frame"
+    ],
+    [
+      "Get the plugin",
+      "text"
+    ],
+    [
+      "section.features",
+      "frame"
+    ],
+    [
+      "What it does",
+      "text"
+    ],
+    [
+      "div.feature-grid",
+      "frame"
+    ],
+    [
+      "article.feature",
+      "frame"
+    ],
+    [
+      "Real boxes",
+      "text"
+    ],
+    [
+      "footer.footer",
+      "frame"
+    ],
+    [
+      "Fit to Figma - MIT licensed.",
+      "text"
+    ],
+    [
+      "nav.footer-links",
+      "frame"
+    ],
+    [
+      "Docs",
+      "text"
+    ],
+    [
+      "p.hero-sub",
+      "frame"
+    ],
+    [
+      "p.feature-body",
+      "frame"
+    ]
+  ],
+  "mustNotExist": [],
+  "textNodes": [
+    "Every screen, in Figma, in one click.",
+    "native layers",
+    "design tree",
+    "Get the plugin",
+    "Read the docs",
+    "What it does",
+    "Real boxes",
+    "Auto layout",
+    "Tokens",
+    "what you see is what lands",
+    "auto layout frames",
+    "Figma variables",
+    "Fit to Figma - MIT licensed.",
+    "Docs",
+    "Source",
+    "Issues"
+  ],
+  "textNodesAbsent": [],
+  "nodes": {
+    "section.hero": {
+      "layout": {
+        "mode": "column",
+        "gap": 24,
+        "padding": [
+          96,
+          64,
+          96,
+          64
+        ],
+        "align": "start",
+        "justify": "start",
+        "wrap": false
+      },
+      "fillTypes": [
+        "solid",
+        "image"
+      ]
+    },
+    "a.btn.btn--primary": {
+      "radius": [
+        10,
+        10,
+        10,
+        10
+      ],
+      "layout": {
+        "mode": "row",
+        "gap": 8,
+        "padding": [
+          14,
+          28,
+          14,
+          28
+        ],
+        "align": "center",
+        "justify": "center",
+        "wrap": false
+      }
+    },
+    "div.feature-grid": {
+      "layout": {
+        "mode": "row",
+        "gap": 24,
+        "padding": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "align": "stretch",
+        "justify": "start",
+        "wrap": false
+      }
+    },
+    "article.feature": {
+      "radius": [
+        14,
+        14,
+        14,
+        14
+      ],
+      "strokes": {
+        "color": "#e3dbe9",
+        "opacity": 1,
+        "weight": 1,
+        "align": "inside"
+      },
+      "layout": {
+        "mode": "column",
+        "gap": 10,
+        "padding": [
+          24,
+          24,
+          24,
+          24
+        ],
+        "align": "stretch",
+        "justify": "start",
+        "wrap": false
+      }
+    },
+    "p.hero-sub": {
+      "layout": {
+        "mode": "row",
+        "wrap": true
+      }
+    },
+    "Every screen, in Figma, in one click.": {
+      "text": {
+        "content": "Every screen, in Figma, in one click.",
+        "font": {
+          "family": "Playfair Display",
+          "weight": 700,
+          "style": "normal",
+          "size": 56,
+          "lineHeight": 64,
+          "letterSpacing": 0
+        },
+        "color": "#ffffff",
+        "opacity": 1,
+        "align": "left",
+        "decoration": "none",
+        "transform": "none"
+      }
+    }
+  }
+}

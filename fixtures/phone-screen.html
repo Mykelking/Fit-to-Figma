@@ -1,0 +1,214 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Phone screen</title>
+<meta name="viewport" content="width=390, initial-scale=1">
+<style>
+  :root {
+    --color-primary: #9c4679;
+    --radius-pill: 24px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: 390px; }
+  body {
+    font-family: Inter, sans-serif;
+    font-size: 16px;
+    font-weight: 400;
+    line-height: 24px;
+    letter-spacing: 0;
+    color: #14121a;
+    background: #f6f4f8;
+  }
+  .screen { display: flex; flex-direction: column; width: 390px; min-height: 844px; }
+
+  .status-bar {
+    display: flex; flex-direction: row;
+    justify-content: space-between; align-items: center;
+    padding: 12px 16px; gap: 0;
+    background: #ffffff;
+  }
+  .status-time { font-size: 14px; line-height: 20px; font-weight: 600; }
+  .status-icons { display: flex; flex-direction: row; align-items: center; gap: 6px; }
+  .status-signal { font-size: 14px; line-height: 20px; font-weight: 400; }
+  .status-battery { font-size: 14px; line-height: 20px; font-weight: 400; }
+
+  .header {
+    display: flex; flex-direction: row;
+    justify-content: space-between; align-items: center;
+    padding: 16px; gap: 0;
+    background: #ffffff;
+  }
+  .header-title { font-size: 28px; line-height: 36px; font-weight: 700; letter-spacing: 0; }
+  .icon-btn {
+    display: flex; flex-direction: row;
+    align-items: center; justify-content: center;
+    width: 40px; height: 40px; padding: 8px; gap: 0;
+    border: 0; border-radius: 12px;
+    background: #f0ecf3; color: #14121a;
+  }
+
+  .content { display: flex; flex-direction: column; gap: 16px; padding: 16px; }
+
+  .card {
+    display: flex; flex-direction: column; gap: 4px;
+    padding: 20px;
+    border-radius: 20px;
+    background: linear-gradient(90deg, var(--color-primary) 0%, #4a2f6e 100%);
+    box-shadow: 0px 8px 24px 0px rgba(0, 0, 0, 0.18);
+    color: #ffffff;
+  }
+  .card-label { font-size: 13px; line-height: 20px; font-weight: 600; letter-spacing: 0; }
+  .card-amount { font-size: 32px; line-height: 40px; font-weight: 700; letter-spacing: 0; }
+
+  .row-list { display: flex; flex-direction: column; gap: 12px; list-style: none; }
+  .row {
+    display: flex; flex-direction: row; align-items: center; gap: 12px;
+    padding: 12px; border-radius: 16px; background: #ffffff;
+  }
+  .avatar {
+    display: flex; align-items: center; justify-content: center;
+    width: 44px; height: 44px; flex: none;
+  }
+  .row-body { display: flex; flex-direction: column; gap: 2px; flex: 1 1 auto; }
+  .row-name { font-size: 15px; line-height: 22px; font-weight: 600; }
+  .row-meta { font-size: 13px; line-height: 18px; font-weight: 400; color: #6b6577; }
+  .row-amount { font-size: 15px; line-height: 22px; font-weight: 600; flex: none; }
+
+  .pill {
+    display: flex; flex-direction: row;
+    align-items: center; justify-content: center;
+    padding: 12px 24px; gap: 8px;
+    border: 0;
+    border-radius: var(--radius-pill);
+    background: var(--color-primary);
+    align-self: stretch;
+  }
+  .pill-label {
+    font-family: Inter, sans-serif;
+    font-size: 16px; line-height: 24px; font-weight: 600;
+    letter-spacing: 0; color: #ffffff; text-align: center;
+  }
+
+  .tab-bar {
+    display: flex; flex-direction: row;
+    justify-content: space-between; align-items: center;
+    padding: 8px 16px; gap: 0;
+    margin-top: auto;
+    background: #ffffff;
+  }
+  .tab {
+    display: flex; flex-direction: column; align-items: center; gap: 4px;
+    padding: 4px 8px; text-decoration: none; color: #6b6577;
+  }
+  .tab-label { font-size: 11px; line-height: 16px; font-weight: 600; }
+  .tab.is-active { color: var(--color-primary); }
+  .tab.is-active .tab-label { color: var(--color-primary); }
+</style>
+</head>
+<body>
+<div class="screen">
+
+  <div class="status-bar">
+    <span class="status-time">9:41</span>
+    <div class="status-icons">
+      <span class="status-signal">LTE</span>
+      <span class="status-battery">100%</span>
+    </div>
+  </div>
+
+  <header class="header">
+    <h1 class="header-title">Today</h1>
+    <button class="icon-btn" type="button" aria-label="Notifications">
+      <svg class="icon-bell" width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <path d="M12 3a6 6 0 0 0-6 6v4l-2 3h16l-2-3V9a6 6 0 0 0-6-6Z" stroke="#14121a" stroke-width="1.6" stroke-linejoin="round"/>
+        <path d="M10 19a2 2 0 0 0 4 0" stroke="#14121a" stroke-width="1.6" stroke-linecap="round"/>
+      </svg>
+    </button>
+  </header>
+
+  <main class="content">
+
+    <section class="card">
+      <p class="card-label">Balance</p>
+      <p class="card-amount">$2,480.00</p>
+    </section>
+
+    <ul class="row-list">
+      <li class="row">
+        <span class="avatar">
+          <svg class="avatar-svg" width="44" height="44" viewBox="0 0 44 44" aria-hidden="true">
+            <circle cx="22" cy="22" r="22" fill="#e6dcef"/>
+            <text x="22" y="27" text-anchor="middle" font-family="Inter, sans-serif" font-size="16" font-weight="700" fill="#4a2f6e">AO</text>
+          </svg>
+        </span>
+        <div class="row-body">
+          <p class="row-name">Ada Okafor</p>
+          <p class="row-meta">Transfer - today</p>
+        </div>
+        <span class="row-amount">-$40.00</span>
+      </li>
+      <li class="row">
+        <span class="avatar">
+          <svg class="avatar-svg" width="44" height="44" viewBox="0 0 44 44" aria-hidden="true">
+            <circle cx="22" cy="22" r="22" fill="#dce9ef"/>
+            <text x="22" y="27" text-anchor="middle" font-family="Inter, sans-serif" font-size="16" font-weight="700" fill="#24506e">BM</text>
+          </svg>
+        </span>
+        <div class="row-body">
+          <p class="row-name">Ben Mensah</p>
+          <p class="row-meta">Refund - yesterday</p>
+        </div>
+        <span class="row-amount">+$18.50</span>
+      </li>
+      <li class="row">
+        <span class="avatar">
+          <svg class="avatar-svg" width="44" height="44" viewBox="0 0 44 44" aria-hidden="true">
+            <circle cx="22" cy="22" r="22" fill="#efe4dc"/>
+            <text x="22" y="27" text-anchor="middle" font-family="Inter, sans-serif" font-size="16" font-weight="700" fill="#6e4a24">CN</text>
+          </svg>
+        </span>
+        <div class="row-body">
+          <p class="row-name">Chidi Nwosu</p>
+          <p class="row-meta">Subscription - Monday</p>
+        </div>
+        <span class="row-amount">-$9.99</span>
+      </li>
+    </ul>
+
+    <button class="pill" type="button"><span class="pill-label">Send money</span></button>
+
+  </main>
+
+  <nav class="tab-bar">
+    <a class="tab is-active" href="#home">
+      <svg class="tab-icon" width="22" height="22" viewBox="0 0 22 22" fill="none" aria-hidden="true">
+        <path d="M3 9.5 11 3l8 6.5V19H3V9.5Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+      </svg>
+      <span class="tab-label">Home</span>
+    </a>
+    <a class="tab" href="#cards">
+      <svg class="tab-icon" width="22" height="22" viewBox="0 0 22 22" fill="none" aria-hidden="true">
+        <rect x="3" y="5" width="16" height="12" rx="2.5" stroke="currentColor" stroke-width="1.6"/>
+      </svg>
+      <span class="tab-label">Cards</span>
+    </a>
+    <a class="tab" href="#stats">
+      <svg class="tab-icon" width="22" height="22" viewBox="0 0 22 22" fill="none" aria-hidden="true">
+        <path d="M4 18V11m5 7V4m5 14v-5m5 5V8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+      </svg>
+      <span class="tab-label">Stats</span>
+    </a>
+    <a class="tab" href="#more">
+      <svg class="tab-icon" width="22" height="22" viewBox="0 0 22 22" fill="none" aria-hidden="true">
+        <circle cx="5" cy="11" r="1.6" fill="currentColor"/>
+        <circle cx="11" cy="11" r="1.6" fill="currentColor"/>
+        <circle cx="17" cy="11" r="1.6" fill="currentColor"/>
+      </svg>
+      <span class="tab-label">More</span>
+    </a>
+  </nav>
+
+</div>
+</body>
+</html>

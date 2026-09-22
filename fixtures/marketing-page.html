@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Marketing page</title>
+<style>
+  :root { --color-primary: #9c4679; --color-ink: #1b1820; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: 1280px; }
+  body {
+    font-family: Inter, sans-serif;
+    font-size: 16px; font-weight: 400; line-height: 26px; letter-spacing: 0;
+    color: var(--color-ink); background: #ffffff;
+  }
+  .page { display: flex; flex-direction: column; width: 1280px; }
+
+  .hero {
+    display: flex; flex-direction: column; align-items: start; gap: 24px;
+    padding: 96px 64px;
+    background-color: #241c2e;
+    background-image: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAIAAACQkWg2AAACc0lEQVR4nAXBocqEMAAAYB/CqtGwYhtWjQaLbQyunIMrC17wikMs4rBoWFkRwWLQYnHBIojFsnLlyv8m//cZtomA+YDmMzBfkUmR+SbmJzVzZpbcrITZDGY7m0KZ8jR7bY6GbT2A9YTWK7BoZL2R9SFWnlolsypuNcJqB0vMllRWf1qjtibDdp7AeUGHBs47cj7IyYlTpk7FnIY7rXDE4MjZ6ZUzns6kncWw3RdwKXTfgfuJ3By5JXGr1G2Y23JXCFcObj+7o3Kn0120uxq2R4H3ht4n8PLIK5FXEa9JvZZ5gntSeP3gjbM3KW85vVV7m2H7b+B/oJ8Hfhn5FfIb4repL5gvud8Lfxz8afYX5a+nv2l/N+zwA8IchmUQVlHYoLAloUhDycKeh6MIpyFc5nBV4XaGuw4Pw45zEJcwroK4ieIWxYLEMo17Fo88nkS8DPE6x5uK9zM+dHwZNi4BriBuAtxGWCAsCe5TPDI8cbwIvA54m/Gu8HHiS+PbsJMKJA1M2iARUSJR0pNkTJOJJQtPVpFsQ7LPyaGS60xunWjDpg2gLaQioDKiPaIjoVNKF0ZXTjdB94EeM70UvU+qNf0adtaCTMBMBlkfZSPKJpItabaybOPZLrJjyK45u1Wmz+yrs59hFwIUEhZ9UIxRMaFiIcWaFhsrdl4coriG4p4LrYrvWfx08WfYtQR1D+sxqKeoXlC9knpL653VB68vUd9Dref6q+rfWf/pGhl214NuhN0UdEvUrajbSLen3cG6i3e36PTQfefup7q/s0O6exi2HIGcoFwCuUZyQ3In8kjlxeTNpRbyO8jfLP+URKd8aPn8B7WMcUhPpcEkAAAAAElFTkSuQmCC");
+    background-size: cover;
+    background-repeat: no-repeat;
+    color: #ffffff;
+  }
+  .hero-title {
+    font-family: "Playfair Display", serif;
+    font-size: 56px; line-height: 64px; font-weight: 700; letter-spacing: 0;
+    color: #ffffff;
+  }
+  .hero-sub { font-size: 20px; line-height: 32px; font-weight: 400; color: #e6e0ec; max-width: 720px; }
+  .hero-sub b { font-weight: 700; color: #ffffff; }
+  .hero-sub a { color: #f0b8d8; text-decoration: underline; }
+
+  .hero-actions { display: flex; flex-direction: row; align-items: center; gap: 16px; }
+  .btn {
+    display: flex; flex-direction: row; align-items: center; justify-content: center;
+    padding: 14px 28px; gap: 8px; border-radius: 10px; text-decoration: none;
+  }
+  .btn--primary { background: var(--color-primary); }
+  .btn--primary .btn-label { color: #ffffff; }
+  .btn--ghost { background: rgba(255, 255, 255, 0.12); }
+  .btn--ghost .btn-label { color: #ffffff; }
+  .btn-label { font-size: 16px; line-height: 24px; font-weight: 600; letter-spacing: 0; }
+
+  .features { display: flex; flex-direction: column; gap: 32px; padding: 72px 64px; }
+  .features-title {
+    font-family: "Playfair Display", serif;
+    font-size: 36px; line-height: 44px; font-weight: 700; color: var(--color-ink);
+  }
+  .feature-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+  }
+  .feature {
+    display: flex; flex-direction: column; gap: 10px;
+    padding: 24px; border-radius: 14px;
+    background: #f7f4f9;
+    border: 1px solid #e3dbe9;
+  }
+  .feature-title { font-size: 20px; line-height: 28px; font-weight: 700; }
+  .feature-body { font-size: 15px; line-height: 24px; font-weight: 400; color: #4a4453; }
+  .feature-body b { font-weight: 700; color: var(--color-ink); }
+
+  .footer {
+    display: flex; flex-direction: row; justify-content: space-between; align-items: center;
+    padding: 32px 64px; gap: 0;
+    background: #1b1820; color: #cfc8d6;
+  }
+  .footer-note { font-size: 14px; line-height: 22px; font-weight: 400; }
+  .footer-links { display: flex; flex-direction: row; align-items: center; gap: 20px; }
+  .footer-link { font-size: 14px; line-height: 22px; font-weight: 600; color: #ffffff; text-decoration: none; }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <section class="hero">
+    <h1 class="hero-title">Every screen, in Figma, in one click.</h1>
+    <p class="hero-sub">Point it at a page and get <b>native layers</b> back - frames, auto layout, text and vectors. Read the <a href="#docs">design tree</a> to see exactly what crosses over.</p>
+    <div class="hero-actions">
+      <a class="btn btn--primary" href="#install"><span class="btn-label">Get the plugin</span></a>
+      <a class="btn btn--ghost" href="#docs"><span class="btn-label">Read the docs</span></a>
+    </div>
+  </section>
+
+  <section class="features">
+    <h2 class="features-title">What it does</h2>
+    <div class="feature-grid">
+      <article class="feature">
+        <h3 class="feature-title">Real boxes</h3>
+        <p class="feature-body">Geometry comes from the browser's own layout, so <b>what you see is what lands</b> on the canvas.</p>
+      </article>
+      <article class="feature">
+        <h3 class="feature-title">Auto layout</h3>
+        <p class="feature-body">Flex and grid containers arrive as <b>auto layout frames</b>, gaps and padding intact.</p>
+      </article>
+      <article class="feature">
+        <h3 class="feature-title">Tokens</h3>
+        <p class="feature-body">Custom properties become <b>Figma variables</b>, and matching colours are bound to them.</p>
+      </article>
+    </div>
+  </section>
+
+  <footer class="footer">
+    <p class="footer-note">Fit to Figma - MIT licensed.</p>
+    <nav class="footer-links">
+      <a class="footer-link" href="#docs">Docs</a>
+      <a class="footer-link" href="#source">Source</a>
+      <a class="footer-link" href="#issues">Issues</a>
+    </nav>
+  </footer>
+
+</div>
+</body>
+</html>

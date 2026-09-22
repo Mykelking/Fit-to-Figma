@@ -1,0 +1,244 @@
+{
+  "fixture": "edge-cases.html",
+  "what": "Every rule the extractor claims to keep, and the places the tree has no room for what CSS said. Four kinds of hidden element must be dropped, a scroll container must keep only its visible part, ::before text must survive somewhere, nested transforms must land as drawn boxes, an inset shadow must become inner-shadow, an elliptical radius must collapse, uppercase must be carried not baked, a missing font family must still be named, currentColor must resolve, a data-URI <img> must become an image asset, 40 levels must not be flattened, and 1,500 small nodes must all arrive.",
+  "viewport": {
+    "w": 1200
+  },
+  "counts": {
+    "frame": {
+      "min": 1550,
+      "max": 1575
+    },
+    "text": {
+      "min": 19,
+      "max": 21
+    },
+    "image": 1,
+    "vector": 1
+  },
+  "assets": {
+    "image": 1,
+    "svg": 1
+  },
+  "fonts": [
+    {
+      "family": "Inter",
+      "weights": [
+        400,
+        600,
+        700
+      ]
+    },
+    {
+      "family": "Nonexistent Sans XYZ",
+      "weights": [
+        400
+      ]
+    }
+  ],
+  "tokens": [
+    {
+      "name": "--color-primary",
+      "value": "#9c4679",
+      "kind": "color"
+    }
+  ],
+  "mustExist": [
+    [
+      "div.page",
+      "frame"
+    ],
+    [
+      "section.case.case-hidden",
+      "frame"
+    ],
+    [
+      "div.scroller",
+      "frame"
+    ],
+    [
+      "p.before-text",
+      "frame"
+    ],
+    [
+      "div.transform-outer",
+      "frame"
+    ],
+    [
+      "div.transform-inner",
+      "frame"
+    ],
+    [
+      "div.inset-shadow",
+      "frame"
+    ],
+    [
+      "div.ellipse-radius",
+      "frame"
+    ],
+    [
+      "shouty text",
+      "text"
+    ],
+    [
+      "A face Figma will not have",
+      "text"
+    ],
+    [
+      "svg.current-color",
+      "vector"
+    ],
+    [
+      "Stroked with currentColor",
+      "text"
+    ],
+    [
+      "img.data-img",
+      "image"
+    ],
+    [
+      "div.depth.depth-1",
+      "frame"
+    ],
+    [
+      "div.depth.depth-40",
+      "frame"
+    ],
+    [
+      "bottom of the well",
+      "text"
+    ],
+    [
+      "div.swarm",
+      "frame"
+    ],
+    [
+      "span.dot",
+      "frame"
+    ],
+    [
+      "Visible row one",
+      "text"
+    ]
+  ],
+  "mustNotExist": [
+    "div.gone-display-none",
+    "span.gone-display-none-text",
+    "div.gone-visibility",
+    "span.gone-visibility-text",
+    "div.gone-zero",
+    "span.gone-zero-text",
+    "div.gone-offcanvas",
+    "span.gone-offcanvas-text"
+  ],
+  "textNodes": [
+    "Visible row one",
+    "Visible row two",
+    "A face Figma will not have",
+    "Stroked with currentColor",
+    "bottom of the well"
+  ],
+  "textNodesAny": [
+    [
+      "Required -",
+      "Required - a signed release",
+      "Required - \na signed release"
+    ]
+  ],
+  "textNodesAbsent": [
+    "MARKER-DISPLAY-NONE",
+    "MARKER-VISIBILITY-HIDDEN",
+    "MARKER-ZERO-SIZE",
+    "MARKER-OFF-CANVAS",
+    "MARKER-BELOW-SCROLL-B",
+    "MARKER-BELOW-SCROLL-C",
+    "MARKER-BELOW-SCROLL-D"
+  ],
+  "nameCounts": {
+    "span.dot": 1500
+  },
+  "depth": {
+    "of": "bottom of the well",
+    "min": 41
+  },
+  "nodes": {
+    "div.inset-shadow": {
+      "effects": [
+        {
+          "type": "inner-shadow",
+          "x": 0,
+          "y": 2,
+          "blur": 6,
+          "spread": 0,
+          "color": "#1b1820",
+          "opacity": 0.35
+        }
+      ]
+    },
+    "div.ellipse-radius": {
+      "radius": [
+        40,
+        40,
+        40,
+        40
+      ]
+    },
+    "div.swarm": {
+      "layout": {
+        "mode": "row",
+        "gap": 2,
+        "padding": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "align": "stretch",
+        "justify": "start",
+        "wrap": true
+      }
+    },
+    "p.before-text": {
+      "layout": {
+        "mode": "row",
+        "wrap": true
+      }
+    },
+    "shouty text": {
+      "text": {
+        "content": "shouty text",
+        "font": {
+          "family": "Inter",
+          "weight": 700,
+          "style": "normal",
+          "size": 16,
+          "lineHeight": 24,
+          "letterSpacing": 1
+        },
+        "color": "#1b1820",
+        "opacity": 1,
+        "align": "left",
+        "decoration": "none",
+        "transform": "upper"
+      }
+    },
+    "A face Figma will not have": {
+      "text": {
+        "content": "A face Figma will not have",
+        "font": {
+          "family": "Nonexistent Sans XYZ",
+          "weight": 400,
+          "style": "normal",
+          "size": 18,
+          "lineHeight": 26,
+          "letterSpacing": 0
+        },
+        "color": "#1b1820",
+        "opacity": 1,
+        "align": "left",
+        "decoration": "none",
+        "transform": "none"
+      }
+    }
+  }
+}

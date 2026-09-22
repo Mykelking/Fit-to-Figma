@@ -1,0 +1,260 @@
+{
+  "fixture": "phone-screen.html",
+  "what": "A 390x844 app screen. Proves flex row and column layout, gap and padding, a linear gradient built from a custom property, a drop shadow, pill radius, inline SVG becoming vector assets, and a tab bar with four labelled tabs.",
+  "viewport": {
+    "w": 390,
+    "h": 844
+  },
+  "counts": {
+    "frame": {
+      "min": 20,
+      "max": 26
+    },
+    "text": 20,
+    "image": 0,
+    "vector": 8
+  },
+  "assets": {
+    "image": 0,
+    "svg": 8
+  },
+  "fonts": [
+    {
+      "family": "Inter",
+      "weights": [
+        400,
+        600,
+        700
+      ]
+    }
+  ],
+  "tokens": [
+    {
+      "name": "--color-primary",
+      "value": "#9c4679",
+      "kind": "color"
+    },
+    {
+      "name": "--radius-pill",
+      "value": "24px",
+      "kind": "number"
+    }
+  ],
+  "mustExist": [
+    [
+      "div.screen",
+      "frame"
+    ],
+    [
+      "div.status-bar",
+      "frame"
+    ],
+    [
+      "9:41",
+      "text"
+    ],
+    [
+      "div.status-icons",
+      "frame"
+    ],
+    [
+      "header.header",
+      "frame"
+    ],
+    [
+      "Today",
+      "text"
+    ],
+    [
+      "button.icon-btn",
+      "frame"
+    ],
+    [
+      "svg.icon-bell",
+      "vector"
+    ],
+    [
+      "main.content",
+      "frame"
+    ],
+    [
+      "section.card",
+      "frame"
+    ],
+    [
+      "Balance",
+      "text"
+    ],
+    [
+      "$2,480.00",
+      "text"
+    ],
+    [
+      "ul.row-list",
+      "frame"
+    ],
+    [
+      "li.row",
+      "frame"
+    ],
+    [
+      "svg.avatar-svg",
+      "vector"
+    ],
+    [
+      "div.row-body",
+      "frame"
+    ],
+    [
+      "Ada Okafor",
+      "text"
+    ],
+    [
+      "Transfer - today",
+      "text"
+    ],
+    [
+      "-$40.00",
+      "text"
+    ],
+    [
+      "button.pill",
+      "frame"
+    ],
+    [
+      "Send money",
+      "text"
+    ],
+    [
+      "nav.tab-bar",
+      "frame"
+    ],
+    [
+      "a.tab.is-active",
+      "frame"
+    ],
+    [
+      "a.tab",
+      "frame"
+    ],
+    [
+      "svg.tab-icon",
+      "vector"
+    ],
+    [
+      "Home",
+      "text"
+    ]
+  ],
+  "mustNotExist": [],
+  "textNodes": [
+    "9:41",
+    "LTE",
+    "100%",
+    "Today",
+    "Balance",
+    "$2,480.00",
+    "Ada Okafor",
+    "Ben Mensah",
+    "Chidi Nwosu",
+    "Send money",
+    "Home",
+    "Cards",
+    "Stats",
+    "More"
+  ],
+  "textNodesAbsent": [],
+  "nodes": {
+    "div.status-bar": {
+      "layout": {
+        "mode": "row",
+        "gap": 0,
+        "padding": [
+          12,
+          16,
+          12,
+          16
+        ],
+        "align": "center",
+        "justify": "space-between",
+        "wrap": false
+      }
+    },
+    "section.card": {
+      "radius": [
+        20,
+        20,
+        20,
+        20
+      ],
+      "effects": [
+        {
+          "type": "shadow",
+          "x": 0,
+          "y": 8,
+          "blur": 24,
+          "spread": 0,
+          "color": "#000000",
+          "opacity": 0.18
+        }
+      ],
+      "fillTypes": [
+        "linear"
+      ]
+    },
+    "button.pill": {
+      "radius": [
+        24,
+        24,
+        24,
+        24
+      ],
+      "layout": {
+        "mode": "row",
+        "gap": 8,
+        "padding": [
+          12,
+          24,
+          12,
+          24
+        ],
+        "align": "center",
+        "justify": "center",
+        "wrap": false
+      }
+    },
+    "nav.tab-bar": {
+      "layout": {
+        "mode": "row",
+        "gap": 0,
+        "padding": [
+          8,
+          16,
+          8,
+          16
+        ],
+        "align": "center",
+        "justify": "space-between",
+        "wrap": false
+      }
+    },
+    "Send money": {
+      "text": {
+        "content": "Send money",
+        "font": {
+          "family": "Inter",
+          "weight": 600,
+          "style": "normal",
+          "size": 16,
+          "lineHeight": 24,
+          "letterSpacing": 0
+        },
+        "color": "#ffffff",
+        "opacity": 1,
+        "align": "center",
+        "decoration": "none",
+        "transform": "none"
+      }
+    }
+  }
+}
