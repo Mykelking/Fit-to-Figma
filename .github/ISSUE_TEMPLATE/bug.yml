@@ -1,0 +1,35 @@
+name: Bug
+description: The plugin or CLI errors, hangs, or does something other than draw layers.
+labels: [bug]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      placeholder: What you did, what you expected, what you got. Paste the error text if there was any.
+    validations:
+      required: true
+  - type: textarea
+    id: tree
+    attributes:
+      label: Attach the tree
+      description: Drag the .tree.json in here. From the CLI, the -o file. From the plugin, Save tree in the run's report. Not the page - the tree.
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      placeholder: Plugin version from the Community page, or fit-to-figma --version
+    validations:
+      required: true
+  - type: dropdown
+    id: where
+    attributes:
+      label: Where
+      options:
+        - Figma desktop
+        - Figma in the browser
+        - CLI
+    validations:
+      required: true

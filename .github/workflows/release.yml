@@ -1,0 +1,32 @@
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run build -w plugin
+      - name: Zip manifest and dist
+        run: |
+          cd plugin
+          zip -r "../fit-to-figma-${GITHUB_REF_NAME}.zip" manifest.json dist
+      - name: Notes from the tag message
+        run: git tag -l --format='%(contents)' "$GITHUB_REF_NAME" > notes.md
+      - uses: softprops/action-gh-release@v2
+        with:
+          body_path: notes.md
+          files: fit-to-figma-*.zip

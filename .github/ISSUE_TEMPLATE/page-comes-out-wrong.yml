@@ -1,0 +1,30 @@
+name: Page comes out wrong
+description: It ran, but a layer is not what the page shows.
+labels: [mapping]
+body:
+  - type: textarea
+    id: tree
+    attributes:
+      label: Attach the tree
+      description: Drag the .tree.json in here. From the CLI, the -o file. From the plugin, Save tree in the run's report. Not the page - the tree.
+    validations:
+      required: true
+  - type: input
+    id: layer
+    attributes:
+      label: Which layer
+      placeholder: Its name in Figma, e.g. button.btn.btn--primary, or its id in the tree, e.g. n12
+    validations:
+      required: true
+  - type: textarea
+    id: diff
+    attributes:
+      label: What it should be
+      placeholder: What the page shows, what Figma drew, and the CSS involved if you know it.
+    validations:
+      required: true
+  - type: textarea
+    id: pictures
+    attributes:
+      label: Pictures
+      description: The page and the Figma result side by side, if you can.

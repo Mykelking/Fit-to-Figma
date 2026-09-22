@@ -1,0 +1,18 @@
+name: Feature
+description: Something the plugin or CLI should do and does not.
+labels: [feature]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What
+      placeholder: The CSS, element or workflow, and what it should become in Figma.
+    validations:
+      required: true
+  - type: textarea
+    id: example
+    attributes:
+      label: A real example
+      placeholder: A page or a CSS string where this comes up.
+    validations:
+      required: true
