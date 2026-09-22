@@ -1,0 +1,30 @@
+{
+  "name": "@fit-to-figma/map",
+  "version": "0.1.0",
+  "type": "module",
+  "license": "MIT",
+  "description": "Pure CSS computed value to design tree mapping. No DOM, no Figma.",
+  "engines": {
+    "node": ">=24"
+  },
+  "sideEffects": false,
+  "files": [
+    "src"
+  ],
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
+    },
+    "./package.json": "./package.json"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@fit-to-figma/tree": "^0.1.0"
+  }
+}

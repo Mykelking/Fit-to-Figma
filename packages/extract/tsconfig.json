@@ -1,0 +1,16 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    // Consumed from source, the same way tree and map are: the plugin and the
+    // CLI bundle it. Nothing is emitted here, so there is no rootDir to keep
+    // the sibling packages out of.
+    "noEmit": true,
+    "declaration": false,
+    "declarationMap": false,
+    "sourceMap": false,
+    // Browser only. No Node types are in scope, so a Node API will not compile.
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "types": []
+  },
+  "include": ["src/**/*.ts"]
+}
