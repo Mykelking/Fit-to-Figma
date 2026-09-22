@@ -35,7 +35,12 @@ const uiPlugin = {
       const shell = await readFile(src('ui/index.html'), 'utf8');
       const marker = '<script>/* @inline-script */</script>';
       if (!shell.includes(marker)) throw new Error('ui/index.html lost its script marker');
-      const page = shell.replace(marker, '<script>\n' + js + '\n</script>');
+      // Replacer function: a plain string would expand $& and friends inside the bundle.
+      const page = shell.replace(marker, () => '<script>\n' + js + '\n</script>');
+      const closes = (s) => s.split('</script>').length - 1;
+      if (closes(page) !== closes(shell) || page.includes(marker)) {
+        throw new Error('ui.html script inlining broke: the bundle closed the script tag early');
+      }
       await mkdir(out('.'), { recursive: true });
       await writeFile(out('ui.html'), page, 'utf8');
       console.log('  dist/ui.html  ' + Math.round(page.length / 1024) + 'kb');
