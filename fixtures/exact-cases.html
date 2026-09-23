@@ -40,6 +40,16 @@
   .icon-row { display: flex; flex-direction: row; align-items: center; gap: 12px; color: var(--color-primary); }
   .icon-label { font-size: 14px; line-height: 20px; font-weight: 600; }
 
+  /* A sprite icon that paints itself: the symbol says fill, the paths say stroke. */
+  .btn-row { display: flex; flex-direction: row; gap: 12px; }
+  .btn {
+    display: flex; flex-direction: row; align-items: center; gap: 8px;
+    padding: 8px 12px; border: 0; border-radius: 8px;
+    background: #f6f4f8; color: var(--color-primary);
+    font-family: Inter, sans-serif; font-size: 14px; line-height: 20px; font-weight: 600;
+  }
+  .ic { width: 24px; height: 24px; }
+
   .lede {
     font-size: 16px;
     line-height: 26px;
@@ -72,6 +82,13 @@
     <path d="M12 3a6 6 0 0 0-6 6v4l-2 3h16l-2-3V9a6 6 0 0 0-6-6Z"/>
     <path d="M10 19a2 2 0 0 0 4 0"/>
   </symbol>
+  <symbol id="i-search-linear" viewBox="0 0 24 24" fill="none">
+    <path d="M11 20C15.9706 20 20 15.9706 20 11C20 6.02944 15.9706 2 11 2C6.02944 2 2 6.02944 2 11C2 15.9706 6.02944 20 11 20Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M18.89 20.89L21 23" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+  </symbol>
+  <symbol id="i-heart-bold" viewBox="0 0 24 24">
+    <path d="M12 21C11 21 2 15 2 9a5 5 0 0 1 10-2 5 5 0 0 1 10 2c0 6-9 12-10 12Z" fill="currentColor"/>
+  </symbol>
 </svg>
 
 <div class="screen">
@@ -81,6 +98,11 @@
     <span class="icon-label">Home</span>
     <svg class="icon" aria-hidden="true"><use href="#i-bell-linear"></use></svg>
     <span class="icon-label">Alerts</span>
+  </div>
+
+  <div class="btn-row">
+    <button class="btn"><svg class="ic" aria-hidden="true"><use href="#i-search-linear"></use></svg><span>Search</span></button>
+    <button class="btn"><svg class="ic" aria-hidden="true"><use href="#i-heart-bold"></use></svg><span>Save</span></button>
   </div>
 
   <p class="lede">A paragraph long enough that the browser has to break it over several lines, so the plugin has lines to carry rather than words to re-wrap on its own.</p>

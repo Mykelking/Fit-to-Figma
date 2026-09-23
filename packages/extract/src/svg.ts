@@ -312,10 +312,14 @@ function expand(use: Element, target: Element, doc: Document, currentColor: stri
 
   const copy = target.cloneNode(true) as Element;
   if (copy.tagName.toLowerCase() === 'symbol') {
+    // The spec puts the symbol's own attributes on the <svg> it becomes, which
+    // sits inside the <use>'s: the content inherits the symbol's paint, and
+    // `fill="none"` on the symbol is the whole reason a stroke icon is not a
+    // black blob. Its children keep every attribute they were written with.
     const nested = doc.createElementNS(SVG_NS, 'svg');
-    for (const name of ['viewBox', 'preserveAspectRatio']) {
-      const value = copy.getAttribute(name);
-      if (value) nested.setAttribute(name, value);
+    for (const attribute of Array.from(copy.attributes)) {
+      if (attribute.name === 'id' || attribute.name.startsWith('xmlns')) continue;
+      nested.setAttribute(attribute.name, attribute.value);
     }
     const width = use.getAttribute('width');
     const height = use.getAttribute('height');

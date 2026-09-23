@@ -80,6 +80,41 @@ describe('inline svg', () => {
     expect(markup).not.toContain('class="icon"');
   });
 
+  it('keeps what the symbol and its paths were written with', async () => {
+    const root = mount({
+      body: `
+        <svg class="sprite" style="display:none" aria-hidden="true">
+          <symbol id="i-search-linear" viewBox="0 0 24 24" fill="none">
+            <path d="M11 20C15.97 20 20 15.97 20 11Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M18.89 20.89L21 23" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </symbol>
+          <symbol id="i-heart-bold" viewBox="0 0 24 24">
+            <path d="M12 21C11 21 2 15 2 9Z" fill="currentColor"/>
+          </symbol>
+        </svg>
+        <button style="color: #9c4679" data-rect="0,0,120,40">
+          <svg class="ic" data-rect="8,8,24,24"><use href="#i-search-linear"></use></svg>
+          <svg class="ic" data-rect="40,8,24,24"><use href="#i-heart-bold"></use></svg>
+        </button>
+      `,
+    });
+    const { tree } = await extractWithReport(root);
+    const [outline, filled] = vectors(tree.root).map((v) => tree.assets[v.asset ?? '']?.data ?? '');
+
+    // The stroke icon: every attribute the paths carried, and the symbol's own
+    // empty fill, which is the difference between an outline and a black blob.
+    expect(outline).toContain('stroke="#9c4679"');
+    expect(outline).toContain('stroke-width="1.5"');
+    expect(outline).toContain('stroke-linecap="round"');
+    expect(outline).toContain('stroke-linejoin="round"');
+    expect(outline).toContain('fill="none"');
+    expect(outline).not.toContain('currentColor');
+
+    // The filled icon resolves the same colour the other way round.
+    expect(filled).toContain('fill="#9c4679"');
+    expect(filled).not.toContain('currentColor');
+  });
+
   it('says so when a use points at nothing', async () => {
     const root = mount({
       body: `<svg class="icon" data-rect="0,0,24,24"><use href="#missing"></use></svg>`,
