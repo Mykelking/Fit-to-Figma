@@ -1,5 +1,5 @@
 import type { DesignTree } from '@fit-to-figma/tree';
-import type { Batch, BuildReport, MainToUi, UiToMain } from '../shared/messages.js';
+import type { Batch, BuildOptions, BuildReport, MainToUi, UiToMain } from '../shared/messages.js';
 import { emptyReport } from '../shared/messages.js';
 import { treesFromHtml } from './render.js';
 import { checkTrees } from './validate.js';
@@ -27,6 +27,7 @@ const el = {
   selector: $<HTMLInputElement>('selector'),
   bind: $<HTMLInputElement>('bind'),
   update: $<HTMLInputElement>('update'),
+  exact: $<HTMLInputElement>('exact'),
   go: $<HTMLButtonElement>('go'),
   status: $<HTMLParagraphElement>('status'),
   bar: $<HTMLDivElement>('bar'),
@@ -191,8 +192,8 @@ async function buildTrees(trees: DesignTree[] | null): Promise<void> {
   showReport(report);
 }
 
-function chosen(): { bindVariables: boolean; updateById: boolean } {
-  return { bindVariables: el.bind.checked, updateById: el.update.checked };
+function chosen(): BuildOptions {
+  return { bindVariables: el.bind.checked, updateById: el.update.checked, exact: el.exact.checked };
 }
 
 async function gather(): Promise<DesignTree[] | null> {

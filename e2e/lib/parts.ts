@@ -10,6 +10,7 @@ export const FIXTURE_NAMES = [
   'marketing-page',
   'dashboard',
   'edge-cases',
+  'exact-cases',
 ] as const;
 
 export type FixtureName = (typeof FIXTURE_NAMES)[number];
@@ -20,6 +21,7 @@ export const VIEWPORTS: Record<FixtureName, { w: number; h: number }> = {
   'marketing-page': { w: 1280, h: 900 },
   dashboard: { w: 1440, h: 900 },
   'edge-cases': { w: 1200, h: 900 },
+  'exact-cases': { w: 390, h: 844 },
 };
 
 export const fixtureHtml = (n: FixtureName) => path.join(FIXTURES, `${n}.html`);

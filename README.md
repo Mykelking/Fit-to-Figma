@@ -54,6 +54,8 @@ It writes one JSON file, the design tree, described in [docs/DESIGN-TREE.md](doc
 
 Boxes come from the browser's layout, not from the stylesheet: what Figma gets is what the page drew. A font Figma does not have falls back to Inter and is listed in the run's report.
 
+**Exact positions, no auto layout** is on by default. Every frame sits at the box the browser gave it, a paragraph is one layer per line the browser drew, and nothing can re-flow: what you get is what you saw. Turn it off for a file you mean to keep working in - frames get auto layout, sizing becomes fixed, fill and hug, and a paragraph is one layer - at the cost of a pixel or two of drift wherever Figma's metrics are not the browser's.
+
 ## What it cannot do yet
 
 - Components. Repeated classes come out as repeated frames, not instances.

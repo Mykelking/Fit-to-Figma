@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Exact cases</title>
+<meta name="viewport" content="width=390, initial-scale=1">
+<style>
+  :root {
+    --color-primary: #9c4679;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: 390px; }
+  body {
+    font-family: Inter, sans-serif;
+    font-size: 16px;
+    font-weight: 400;
+    line-height: 24px;
+    color: #14121a;
+    background: #ffffff;
+  }
+
+  .sprite { display: none; }
+
+  .screen {
+    position: relative;
+    display: flex; flex-direction: column;
+    gap: 16px; padding: 24px 16px;
+    width: 390px; min-height: 640px;
+  }
+
+  /* Stroke only icons: the paint is here, not on the markup. */
+  .icon {
+    width: 24px; height: 24px;
+    stroke: currentColor;
+    fill: none;
+    stroke-width: 1.5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .icon-row { display: flex; flex-direction: row; align-items: center; gap: 12px; color: var(--color-primary); }
+  .icon-label { font-size: 14px; line-height: 20px; font-weight: 600; }
+
+  .lede {
+    font-size: 16px;
+    line-height: 26px;
+  }
+  .note {
+    font-size: 13px; line-height: 20px; color: #6b6b6b;
+    text-align: center;
+  }
+
+  /* Out of flow inside an auto layout column. */
+  .dock { position: relative; display: flex; flex-direction: column; gap: 8px; height: 120px; background: #f6f4f8; }
+  .dock-line { font-size: 14px; line-height: 20px; padding: 8px 12px; }
+  .float {
+    position: absolute; right: 12px; bottom: 12px;
+    display: flex; align-items: center; justify-content: center;
+    width: 56px; height: 56px; border-radius: 28px;
+    background: var(--color-primary); color: #ffffff;
+    font-size: 24px; line-height: 24px;
+  }
+</style>
+</head>
+<body>
+
+<svg class="sprite" aria-hidden="true">
+  <symbol id="i-home-linear" viewBox="0 0 24 24">
+    <path d="M3 10 12 3l9 7v11H3V10Z"/>
+    <path d="M9 21v-6h6v6"/>
+  </symbol>
+  <symbol id="i-bell-linear" viewBox="0 0 24 24">
+    <path d="M12 3a6 6 0 0 0-6 6v4l-2 3h16l-2-3V9a6 6 0 0 0-6-6Z"/>
+    <path d="M10 19a2 2 0 0 0 4 0"/>
+  </symbol>
+</svg>
+
+<div class="screen">
+
+  <div class="icon-row">
+    <svg class="icon" aria-hidden="true"><use href="#i-home-linear"></use></svg>
+    <span class="icon-label">Home</span>
+    <svg class="icon" aria-hidden="true"><use href="#i-bell-linear"></use></svg>
+    <span class="icon-label">Alerts</span>
+  </div>
+
+  <p class="lede">A paragraph long enough that the browser has to break it over several lines, so the plugin has lines to carry rather than words to re-wrap on its own.</p>
+
+  <p class="note">A centred note that also runs past the end of one line and wraps.</p>
+
+  <div class="dock">
+    <p class="dock-line">In the flow, first</p>
+    <p class="dock-line">In the flow, second</p>
+    <div class="float">+</div>
+  </div>
+
+</div>
+
+</body>
+</html>

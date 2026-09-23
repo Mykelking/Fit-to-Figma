@@ -1,5 +1,6 @@
+import type { LineBox } from '@fit-to-figma/tree';
 import type { Box } from './geometry.js';
-import { boxFromRect, isEmpty, union } from './geometry.js';
+import { boxFromRect, isEmpty, round, union } from './geometry.js';
 import { read } from './style.js';
 import type { Warnings } from './warnings.js';
 
@@ -22,6 +23,8 @@ export interface TextRun {
   box: Box;
   /** Line boxes the browser drew the run on; 0 when nothing could measure it. */
   lines: number;
+  /** The words on each of those lines, when there is more than one. */
+  lineBoxes: LineBox[];
   /** A stable suffix for the run's id: which child node it started at. */
   key: string;
 }
@@ -60,7 +63,15 @@ export function directRuns({ el, origin, view, warnings, nodeId }: RunArgs): Tex
     const content = collapse(group.map((node) => node.nodeValue ?? '').join(''), whiteSpace);
     if (content.trim().length > 0) {
       const drawn = boxOfNodes(group, origin, view, warnings, nodeId, el);
-      if (drawn) runs.push({ content, box: drawn.box, lines: drawn.lines, key: `#t${groupStart}` });
+      if (drawn) {
+        runs.push({
+          content,
+          box: drawn.box,
+          lines: drawn.lines,
+          lineBoxes: drawn.lineBoxes,
+          key: `#t${groupStart}`,
+        });
+      }
     }
     group = [];
   };
@@ -93,7 +104,7 @@ function boxOfNodes(
   warnings: Warnings,
   nodeId: string,
   el: Element,
-): { box: Box; lines: number } | null {
+): { box: Box; lines: number; lineBoxes: LineBox[] } | null {
   const first = nodes[0];
   const last = nodes[nodes.length - 1];
   if (!first || !last) return null;
@@ -112,7 +123,9 @@ function boxOfNodes(
         { node: nodeId },
       );
     }
-    return { box: measured.box, lines: measured.lines };
+    // Only a run that wrapped needs its lines carried: one line cannot break.
+    const lineBoxes = measured.lines > 1 ? lineBoxesOf(nodes, origin, view) : [];
+    return { box: measured.box, lines: measured.lines, lineBoxes };
   }
 
   warnings.add(
@@ -123,7 +136,68 @@ function boxOfNodes(
   const rect = el.getBoundingClientRect();
   const box = boxFromRect(rect, origin);
   // Nothing measured it, so nothing is claimed about how many lines it took.
-  return isEmpty(box) ? null : { box, lines: 0 };
+  return isEmpty(box) ? null : { box, lines: 0, lineBoxes: [] };
+}
+
+/**
+ * Which words the browser put on which line.
+ *
+ * Figma breaks lines at its own words, so a paragraph rebuilt from the run's
+ * text alone comes out a line longer and covers whatever is under it. Every
+ * word is measured on its own and the ones that share a line are grouped, so
+ * the plugin can draw the lines the page drew.
+ */
+function lineBoxesOf(nodes: Text[], origin: { x: number; y: number }, view: Window): LineBox[] {
+  const doc = view.document;
+  if (typeof doc?.createRange !== 'function') return [];
+  const lines: LineBox[] = [];
+  let box: Box | null = null;
+  let words: string[] = [];
+
+  const flush = (): void => {
+    if (!box || words.length === 0) return;
+    lines.push({ text: words.join(' '), x: round(box.x), y: round(box.y), w: round(box.w), h: round(box.h) });
+    box = null;
+    words = [];
+  };
+
+  for (const node of nodes) {
+    const text = node.nodeValue ?? '';
+    const word = /\S+/g;
+    let found = word.exec(text);
+    while (found) {
+      const rect = wordRect(doc, node, found.index, found.index + found[0].length);
+      if (rect) {
+        const at = boxFromRect(rect, origin);
+        if (!isEmpty(at)) {
+          // A word whose top matches the line being built is on that line.
+          if (box && Math.abs(at.y - box.y) <= 1) {
+            box = union(box, at);
+            words.push(found[0]);
+          } else {
+            flush();
+            box = at;
+            words = [found[0]];
+          }
+        }
+      }
+      found = word.exec(text);
+    }
+  }
+  flush();
+  return lines;
+}
+
+function wordRect(doc: Document, node: Text, start: number, end: number): DOMRect | null {
+  try {
+    const range = doc.createRange();
+    range.setStart(node, start);
+    range.setEnd(node, end);
+    const rect = range.getBoundingClientRect?.();
+    return rect && rect.width > 0 && rect.height > 0 ? rect : null;
+  } catch {
+    return null;
+  }
 }
 
 interface Measured {

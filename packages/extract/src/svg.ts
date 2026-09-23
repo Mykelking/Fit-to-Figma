@@ -12,22 +12,46 @@ import type { Warnings } from './warnings.js';
 const SVG_NS = 'http://www.w3.org/2000/svg';
 const XLINK_NS = 'http://www.w3.org/1999/xlink';
 
-/** Painted properties worth carrying. Values equal to the default are skipped. */
+/**
+ * Painted properties worth carrying, each with the value SVG assumes when the
+ * attribute is absent. Values are written in the form an attribute takes, so
+ * the initials are given that way too.
+ */
 const PAINT_PROPERTIES: Array<[property: string, initial: string]> = [
-  ['fill', 'rgb(0, 0, 0)'],
+  ['fill', '#000000'],
   ['fill-opacity', '1'],
   ['fill-rule', 'nonzero'],
   ['stroke', 'none'],
-  ['stroke-width', '1px'],
+  ['stroke-width', '1'],
   ['stroke-opacity', '1'],
   ['stroke-linecap', 'butt'],
   ['stroke-linejoin', 'miter'],
   ['stroke-miterlimit', '4'],
   ['stroke-dasharray', 'none'],
-  ['stroke-dashoffset', '0px'],
+  ['stroke-dashoffset', '0'],
   ['opacity', '1'],
   ['mix-blend-mode', 'normal'],
 ];
+
+/** The painted properties an element passes down to its children. */
+const INHERITED = PAINT_PROPERTIES.filter(([p]) => p !== 'opacity' && p !== 'mix-blend-mode');
+
+/** What actually draws, and so has to carry its own paint. */
+const DRAWN = new Set([
+  'path',
+  'rect',
+  'circle',
+  'ellipse',
+  'line',
+  'polyline',
+  'polygon',
+  'text',
+  'tspan',
+  'textpath',
+]);
+
+/** The ones that draw words, which carry the font as well. */
+const TEXTUAL = new Set(['text', 'tspan', 'textpath']);
 
 const TEXT_PROPERTIES: Array<[property: string, initial: string]> = [
   ['font-family', ''],
@@ -60,6 +84,7 @@ export function serialiseSvg({ svg, size, warnings, nodeId }: SerialiseSvgArgs):
   copyComputedPaint(svg, clone);
   inlineUses(svg, clone, currentColor, warnings, nodeId);
   replaceCurrentColor(clone, currentColor);
+  resolveInherited(clone);
   scrub(clone);
 
   clone.setAttribute('xmlns', SVG_NS);
@@ -121,19 +146,98 @@ function applyComputed(view: Window, from: Element, to: Element): void {
   }
   if (!style || style.length === 0) return;
 
-  const target = to as unknown as { style?: CSSStyleDeclaration };
-  if (!target.style) return;
-
   const tag = from.tagName.toLowerCase();
-  const wanted =
-    tag === 'text' || tag === 'tspan' || tag === 'textPath'.toLowerCase()
-      ? [...PAINT_PROPERTIES, ...TEXT_PROPERTIES]
-      : PAINT_PROPERTIES;
+  const wanted = TEXTUAL.has(tag) ? [...PAINT_PROPERTIES, ...TEXT_PROPERTIES] : PAINT_PROPERTIES;
 
+  // Attributes, not a style attribute: the plugin reads SVG, not CSS.
   for (const [property, initial] of wanted) {
-    const value = style.getPropertyValue(property).trim();
-    if (!value || value === initial) continue;
-    target.style.setProperty(property, value);
+    const raw = style.getPropertyValue(property);
+    const value = clean(property, raw);
+    if (value === '' || value === initial) continue;
+    write(to, property, value, alphaOf(raw));
+  }
+}
+
+/**
+ * One value, in the form an attribute takes: a colour as `#rrggbb`, a length
+ * without its unit, anything else as it came.
+ */
+function clean(property: string, raw: string): string {
+  const value = (raw ?? '').trim();
+  if (value === '') return '';
+  const colour = toHex(value);
+  if (colour) return colour.hex;
+  const length = /^(-?\d*\.?\d+)px$/.exec(value);
+  return length && length[1] !== undefined ? length[1] : value;
+}
+
+/** `rgb()` and `rgba()` as the browser computes them, and plain hex. */
+function toHex(value: string): { hex: string; alpha: number } | null {
+  const short = /^#([0-9a-f]{3})$/i.exec(value);
+  if (short && short[1]) {
+    const s = short[1];
+    return { hex: '#' + s.split('').map((c) => c + c).join('').toLowerCase(), alpha: 1 };
+  }
+  if (/^#[0-9a-f]{6}$/i.test(value)) return { hex: value.toLowerCase(), alpha: 1 };
+
+  const rgb = /^rgba?\(([^)]+)\)$/i.exec(value);
+  if (!rgb || rgb[1] === undefined) return null;
+  const parts = rgb[1].split(/[,/\s]+/).filter((p) => p !== '');
+  const channel = (at: number): number => {
+    const n = Number.parseFloat(parts[at] ?? '0');
+    return Number.isFinite(n) ? Math.min(255, Math.max(0, Math.round(n))) : 0;
+  };
+  const two = (n: number): string => n.toString(16).padStart(2, '0');
+  const alpha = parts.length > 3 ? Number.parseFloat(parts[3] ?? '1') : 1;
+  return {
+    hex: '#' + two(channel(0)) + two(channel(1)) + two(channel(2)),
+    alpha: Number.isFinite(alpha) ? Math.min(1, Math.max(0, alpha)) : 1,
+  };
+}
+
+/** Writes one property, splitting a see-through colour off into its opacity. */
+function write(el: Element, property: string, value: string, alpha = 1): void {
+  el.setAttribute(property, value);
+  if (alpha < 1 && (property === 'fill' || property === 'stroke')) {
+    el.setAttribute(property + '-opacity', String(Math.round(alpha * 1000) / 1000));
+  }
+}
+
+function alphaOf(raw: string): number {
+  const colour = toHex((raw ?? '').trim());
+  return colour ? colour.alpha : 1;
+}
+
+/**
+ * Push the paint down to the things that draw.
+ *
+ * An inlined symbol was never laid out on the page, so nothing computed its
+ * paint: it takes it from the `<use>` site, the way the browser would have.
+ * After this every drawn element says what it is painted with, and the asset
+ * no longer depends on a stylesheet, on `currentColor` or on its ancestors.
+ */
+function resolveInherited(root: Element): void {
+  const walk = (el: Element, from: Map<string, string>): void => {
+    const here = new Map(from);
+    const drawn = DRAWN.has(el.tagName.toLowerCase());
+    for (const [property, initial] of INHERITED) {
+      const own = clean(property, el.getAttribute(property) ?? styleOf(el, property));
+      const value = own !== '' ? own : here.get(property) ?? '';
+      if (value === '') continue;
+      here.set(property, value);
+      if (drawn && value !== initial) el.setAttribute(property, value);
+    }
+    for (const child of Array.from(el.children)) walk(child, here);
+  };
+  walk(root, new Map());
+}
+
+function styleOf(el: Element, property: string): string {
+  const style = (el as unknown as { style?: CSSStyleDeclaration }).style;
+  try {
+    return style?.getPropertyValue(property) ?? '';
+  } catch {
+    return '';
   }
 }
 
@@ -198,9 +302,10 @@ function expand(use: Element, target: Element, doc: Document, currentColor: stri
   // The paint on the <use> is what the symbol inherits.
   const useStyleDeclaration = (use as unknown as { style?: CSSStyleDeclaration }).style;
   for (const [property] of PAINT_PROPERTIES) {
-    const value =
-      use.getAttribute(property) ?? useStyleDeclaration?.getPropertyValue(property) ?? '';
-    if (value) group.setAttribute(property, value === 'currentColor' ? currentColor : value);
+    const own = use.getAttribute(property) ?? useStyleDeclaration?.getPropertyValue(property) ?? '';
+    const raw = own === 'currentColor' ? currentColor : own;
+    const value = clean(property, raw);
+    if (value !== '') write(group, property, value, alphaOf(raw));
   }
   const useStyle = use.getAttribute('style');
   if (useStyle) group.setAttribute('style', useStyle.replace(/currentColor/g, currentColor));
@@ -250,13 +355,17 @@ function replaceCurrentColor(root: Element, color: string): void {
   }
 }
 
-/** Nothing that runs, nothing that phones home. */
+/** Nothing that runs, nothing that phones home, nothing left over from the page. */
 function scrub(root: Element): void {
   for (const el of Array.from(root.querySelectorAll('script, foreignObject'))) el.remove();
   const all: Element[] = [root, ...Array.from(root.querySelectorAll('*'))];
   for (const el of all) {
     for (const attribute of Array.from(el.attributes)) {
-      if (attribute.name.toLowerCase().startsWith('on')) el.removeAttribute(attribute.name);
+      const name = attribute.name.toLowerCase();
+      // A class hooks a stylesheet that is not coming, and data is the page's.
+      if (name.startsWith('on') || name === 'class' || name.startsWith('data-')) {
+        el.removeAttribute(attribute.name);
+      }
     }
   }
 }

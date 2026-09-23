@@ -52,6 +52,34 @@ describe('inline svg', () => {
     expect(markup).toContain('xmlns="http://www.w3.org/2000/svg"');
   });
 
+  it('a stroke only icon keeps its stroke and its empty fill, on the path itself', async () => {
+    const root = mount({
+      body: `
+        <svg class="sprite" style="display:none" aria-hidden="true">
+          <symbol id="home" viewBox="0 0 24 24">
+            <path d="M3 10 12 3l9 7v11H3V10Z"/>
+          </symbol>
+        </svg>
+        <span style="color: #9c4679" data-rect="0,0,24,24">
+          <svg class="icon" style="stroke: currentColor; fill: none; stroke-width: 1.5px" data-rect="0,0,24,24">
+            <use href="#home"></use>
+          </svg>
+        </span>
+      `,
+    });
+    const { tree } = await extractWithReport(root);
+    const markup = tree.assets[vectors(tree.root)[0]?.asset ?? '']?.data ?? '';
+
+    expect(markup).toContain('M3 10 12 3l9 7v11H3V10Z');
+    expect(markup).toContain('stroke="#9c4679"');
+    expect(markup).toContain('fill="none"');
+    expect(markup).toContain('stroke-width="1.5"');
+    expect(markup).not.toContain('<use');
+    expect(markup).not.toContain('currentColor');
+    // Nothing is left for a stylesheet or an ancestor to say.
+    expect(markup).not.toContain('class="icon"');
+  });
+
   it('says so when a use points at nothing', async () => {
     const root = mount({
       body: `<svg class="icon" data-rect="0,0,24,24"><use href="#missing"></use></svg>`,

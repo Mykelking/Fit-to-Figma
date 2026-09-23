@@ -5,6 +5,11 @@ export interface BuildOptions {
   bindVariables: boolean;
   /** Replace a frame whose pluginData.fitId matches, in place. */
   updateById: boolean;
+  /**
+   * Draw what the browser drew: no auto layout, every child at the box the
+   * tree gives it, and a wrapped run as one layer per line.
+   */
+  exact?: boolean;
   /** Nodes made between yields to the event loop. */
   batchSize?: number;
   /** The variable collection tokens go into. Unset names it after the source. */

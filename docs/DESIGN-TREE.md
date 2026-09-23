@@ -44,10 +44,12 @@ A Node:
   "effects": [ { "type": "shadow" | "inner-shadow", "x": 0, "y": 2, "blur": 8, "spread": 0, "color": "#…", "opacity": 0.2 } | { "type": "blur", "radius": 12 } | { "type": "backdrop-blur", "radius": 12 } ],
   "opacity": 1,
   "clip": true,
+  "flow": "absolute",                        // optional: the browser took this box out of the flow
   "text": {                                  // text only
     "content": "Join",
     "font": { "family": "…", "weight": 700, "style": "normal" | "italic", "size": 16, "lineHeight": 24, "letterSpacing": 0 },
     "lines": 1,                              // optional: line boxes the browser drew this run on
+    "lineBoxes": [ { "text": "…", "x": 0, "y": 0, "w": 0, "h": 0 } ],   // optional: one entry per line, when the run wrapped
     "color": "#…", "opacity": 1,
     "align": "left" | "center" | "right",
     "decoration": "none" | "underline" | "strike",
@@ -68,6 +70,8 @@ What the shapes above leave unsaid:
 - `section` is the name of a Figma section on that page, and it is optional. The plugin takes the first section of that name or makes one under everything already on the page, and `place` is then read inside the section. At the end of a run each section it touched is drawn round its frames with 80 px of air on every side.
 - `place` is where the root frame goes on the Figma page, in Figma canvas units, absolute, and it is optional. A tree without it is laid out beside the last one, from the centre of the view. The plugin rounds both numbers, and it ignores `place` when it is updating an existing frame in place: the frame already on the page keeps its position.
 - `lines` is how many line boxes the browser drew a run on, and it is optional. Figma's metrics are not the browser's, so a run drawn on one line is told to size itself rather than wrap; a run that wrapped keeps its width and grows downwards. Without it the plugin reads the run's height against its line height.
+- `lineBoxes` is every line of a run that wrapped, in order, each with the words on it and the box the browser drew them in, positioned like any other node. It is there whenever `lines` is more than one. The plugin draws one text layer per line so nothing can break at a different word than the page did.
+- `flow` says the browser took the box out of the flow: `position` was absolute, fixed or sticky. It changes nothing about the box, which is where the element ended up; it tells the plugin that a child of an auto layout frame is not one of the laid out ones.
 - A token's `value` is always the string the page held; `kind` says how to read it.
 - `layout`, `sizing`, `strokes`, `text` and `semantic` are each optional, but when one is present every field in it is there.
 - An `image` or a `vector` node always has an `asset`, and a `text` node always has `text`. Nothing else is made compulsory by a node's `type`.

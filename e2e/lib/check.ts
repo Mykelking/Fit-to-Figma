@@ -30,6 +30,7 @@ export interface Expect {
 export interface NodeExpect {
   layout?: unknown;
   noLayout?: boolean;
+  flow?: unknown;
   radius?: unknown;
   effects?: unknown;
   text?: unknown;
@@ -243,7 +244,7 @@ export function check(tree: DesignTree, exp: Expect, file: string): Failure[] {
       continue;
     }
     if (want.noLayout && node.layout !== undefined) add(`${name}.layout`, 'absent (not flex, not grid)', node.layout);
-    for (const key of ['layout', 'radius', 'effects', 'text', 'strokes', 'sizing'] as const) {
+    for (const key of ['layout', 'radius', 'effects', 'text', 'strokes', 'sizing', 'flow'] as const) {
       const w = want[key];
       if (w === undefined) continue;
       const g = (node as unknown as Record<string, unknown>)[key];

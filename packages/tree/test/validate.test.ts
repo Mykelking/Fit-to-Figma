@@ -175,6 +175,23 @@ describe('validateTree', () => {
     expect(validateTree(put(clone(validTree()), 'section', '')).ok).toBe(false);
   });
 
+  it('flow is optional and says absolute or nothing', () => {
+    const at = 'root.children.0.flow';
+    expect(validateTree(put(clone(validTree()), at, 'absolute')).ok).toBe(true);
+    expect(validateTree(put(clone(validTree()), at, 'relative')).ok).toBe(false);
+  });
+
+  it('lineBoxes carry the words and the box of each line', () => {
+    const at = 'root.children.0.children.0.text.lineBoxes';
+    const lines = [
+      { text: 'first line', x: 16, y: 64, w: 352, h: 20 },
+      { text: 'second line', x: 16, y: 90, w: 210, h: 20 },
+    ];
+    expect(validateTree(put(clone(validTree()), at, lines)).ok).toBe(true);
+    expect(validateTree(put(clone(validTree()), at, [{ text: 'no box' }])).ok).toBe(false);
+    expect(validateTree(put(clone(validTree()), at, 'two lines')).ok).toBe(false);
+  });
+
   it('place is optional and takes two numbers', () => {
     expect(validateTree(drop(clone(validTree()), 'place')).ok).toBe(true);
     expect(validateTree(put(clone(validTree()), 'place', { x: -40.5, y: 0 })).ok).toBe(true);

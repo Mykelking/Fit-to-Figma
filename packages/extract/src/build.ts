@@ -1,4 +1,4 @@
-import type { Layout, Node, Paint } from '@fit-to-figma/tree';
+import type { Layout, LineBox, Node, Paint } from '@fit-to-figma/tree';
 import type { AssetRef, Assets } from './assets.js';
 import { parseDataUrl } from './assets.js';
 import type { Fonts } from './fonts.js';
@@ -172,6 +172,7 @@ export async function buildElement(
 
   await paint(node, el, style, box, ctx, id, media !== null);
   node.semantic = semanticOf(el, media?.src ? { src: media.src } : undefined);
+  if (outOfFlow(style)) node.flow = 'absolute';
 
   const own: LayoutFor = media ? { layout: null, notes: [] } : layoutFor(style, ctx.viewport);
   node.sizing = sizingFor(style, ctx.viewport, frame.parentLayout, {
@@ -249,11 +250,21 @@ function asText(frame: Node, run: Node): Node {
   merged.h = frame.h;
   if (frame.semantic) merged.semantic = frame.semantic;
   if (frame.sizing) merged.sizing = frame.sizing;
+  if (frame.flow) merged.flow = frame.flow;
   const opacity = round((frame.opacity ?? 1) * (run.opacity ?? 1));
   if (opacity < 1) merged.opacity = opacity;
   else delete merged.opacity;
   delete merged.children;
   return merged;
+}
+
+/**
+ * Is this box out of its parent's flow? A floating button in a flex column is
+ * where the browser put it, not where the column would have put it.
+ */
+function outOfFlow(style: CSSStyleDeclaration): boolean {
+  const position = read(style, 'position').toLowerCase();
+  return position === 'absolute' || position === 'fixed' || position === 'sticky';
 }
 
 /** Does this frame draw anything of its own, or hold its text off its edges? */
@@ -406,6 +417,7 @@ async function buildChildren(
           content: run.content,
           box: run.box,
           lines: run.lines,
+          lineBoxes: run.lineBoxes,
           style,
           name: nameOf(el),
           clip: frame.clip,
@@ -475,6 +487,8 @@ interface TextNodeArgs {
   clip: Box;
   /** Line boxes the run was drawn on, when something measured it. */
   lines?: number;
+  /** The words on each of those lines, when the run wrapped. */
+  lineBoxes?: LineBox[];
 }
 
 /** A run of text, or nothing when the run is outside what can be seen. */
@@ -486,6 +500,8 @@ function textNode(args: TextNodeArgs): Node | null {
   // The plugin needs to know a one line run from a wrapped one: Figma's metrics
   // are not the browser's, and a line that only just fitted here would wrap there.
   if (typeof args.lines === 'number' && args.lines >= 1) text.lines = Math.round(args.lines);
+  // The lines themselves, so the plugin breaks where the browser broke.
+  if (args.lineBoxes && args.lineBoxes.length > 1) text.lineBoxes = args.lineBoxes;
   ctx.fonts.seen(text.font);
 
   if (looksLikeIcon(args.content, text.font.family)) {

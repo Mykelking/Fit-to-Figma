@@ -349,19 +349,22 @@ function frameWithId(children: readonly SceneNode[], id: string): FrameNode | nu
 
 async function addChildren(parent: FrameNode, node: TreeNode, ctx: Ctx): Promise<void> {
   const children = Array.isArray(node.children) ? node.children : [];
-  const absolute = !node.layout;
+  const laidOut = Boolean(node.layout) && ctx.options.exact !== true;
   for (const child of children) {
     try {
+      if (await addTextLines(parent, child, node, ctx)) continue;
       const made = await makeNode(child, ctx);
       if (!made) continue;
       parent.appendChild(made);
-      if (absolute) {
+      // A box the browser took out of the flow is not one of the laid out ones.
+      const loose = laidOut && child.flow === 'absolute' && setLoose(made, ctx);
+      if (!laidOut || loose) {
         made.x = at(child.x) - at(node.x);
         made.y = at(child.y) - at(node.y);
         // Text is placed before it is anchored: its width is its own by now.
         if (made.type === 'TEXT') anchorText(made, child);
       }
-      applySizing(made, child.sizing, !absolute, ctx);
+      applySizing(made, child.sizing, laidOut && !loose, ctx);
       if (made.type === 'FRAME' && child.type === 'frame') {
         await addChildren(made, child, ctx);
       }
@@ -369,6 +372,53 @@ async function addChildren(parent: FrameNode, node: TreeNode, ctx: Ctx): Promise
       ctx.report.warnings.push(label(child) + ': ' + message(err));
     }
   }
+}
+
+/** Takes a child out of its parent's auto layout, so its own x and y stand. */
+function setLoose(made: SceneNode, ctx: Ctx): boolean {
+  try {
+    (made as SceneNode & { layoutPositioning: 'AUTO' | 'ABSOLUTE' }).layoutPositioning = 'ABSOLUTE';
+    return true;
+  } catch (err) {
+    ctx.report.warnings.push(made.name + ': out of flow - ' + message(err));
+    return false;
+  }
+}
+
+/**
+ * One text layer per line the browser drew.
+ *
+ * Figma breaks lines where its own metrics say to, which is a word earlier or
+ * later than the page, and the paragraph then covers what is under it. Each
+ * line the browser laid out is its own layer at its own box, so there is
+ * nothing left to re-wrap.
+ */
+async function addTextLines(parent: FrameNode, child: TreeNode, node: TreeNode, ctx: Ctx): Promise<boolean> {
+  const style = child.type === 'text' ? child.text : undefined;
+  const lines = style ? style.lineBoxes : undefined;
+  if (ctx.options.exact !== true || !style || !Array.isArray(lines) || lines.length < 2) return false;
+
+  let n = 0;
+  for (const line of lines) {
+    n += 1;
+    const piece: TreeNode = {
+      ...child,
+      id: child.id + '#l' + n,
+      name: (child.name !== '' ? child.name : child.id) + ' · line ' + n,
+      x: at(line.x),
+      y: at(line.y),
+      w: size(line.w),
+      h: size(line.h),
+      text: { ...style, content: line.text, lines: 1, lineBoxes: undefined },
+    };
+    const made = await makeNode(piece, ctx);
+    if (!made) continue;
+    parent.appendChild(made);
+    made.x = at(line.x) - at(node.x);
+    made.y = at(line.y) - at(node.y);
+    if (made.type === 'TEXT') anchorText(made, piece);
+  }
+  return true;
 }
 
 /** One node, no children. Returns null when the node is not worth drawing. */
@@ -417,7 +467,8 @@ function makeFrame(node: TreeNode, ctx: Ctx): FrameNode {
   frame.resize(size(node.w), size(node.h));
   frame.fills = [];
   frame.clipsContent = node.clip === true;
-  if (node.layout) applyLayout(frame, node.layout, ctx);
+  // Exact wants the boxes the browser drew, and auto layout would move them.
+  if (node.layout && ctx.options.exact !== true) applyLayout(frame, node.layout, ctx);
   return frame;
 }
 
@@ -508,7 +559,7 @@ async function makeText(node: TreeNode, ctx: Ctx): Promise<SceneNode | null> {
 
   const text = figma.createText();
   text.fontName = resolved.font;
-  text.characters = transform(style.content, style.transform);
+  text.characters = transform(contentOf(style), style.transform);
 
   if (Number.isFinite(font.size) && font.size > 0) text.fontSize = font.size;
   if (Number.isFinite(font.lineHeight) && font.lineHeight > 0) {
@@ -543,7 +594,9 @@ async function makeText(node: TreeNode, ctx: Ctx): Promise<SceneNode | null> {
  * width, with a pixel of slack each side, and grows downwards.
  */
 function fitText(text: TextNode, node: TreeNode, style: TextStyle): void {
-  if (oneLine(node, style)) {
+  // Text that carries its own line breaks has nothing left to wrap.
+  const broken = Array.isArray(style.lineBoxes) && style.lineBoxes.length > 1;
+  if (broken || oneLine(node, style)) {
     text.textAutoResize = 'WIDTH_AND_HEIGHT';
     return;
   }
@@ -566,6 +619,16 @@ function anchorText(text: TextNode, node: TreeNode): void {
   if (align !== 'center' && align !== 'right') return;
   const slack = size(node.w) - text.width;
   text.x += align === 'center' ? Math.round(slack / 2) : Math.round(slack);
+}
+
+/**
+ * One layer for a run that wrapped keeps the browser's line breaks in the text
+ * itself, so Figma has nothing left to decide.
+ */
+function contentOf(style: TextStyle): string {
+  const lines = style.lineBoxes;
+  if (Array.isArray(lines) && lines.length > 1) return lines.map((line) => line.text).join('\n');
+  return style.content;
 }
 
 function transform(content: string, how: TextStyle['transform']): string {

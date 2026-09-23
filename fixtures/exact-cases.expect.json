@@ -1,0 +1,70 @@
+{
+  "fixture": "exact-cases.html",
+  "what": "A 390x844 screen for the three things only the browser knows: stroke only icons drawn through <use> and a stylesheet, paragraphs that wrap, and a floating button taken out of a flex column. The icons must come out as standalone markup with the paint on the paths, the paragraphs must carry the lines the browser broke, and the button must say it is out of the flow.",
+  "viewport": {
+    "w": 390,
+    "h": 844
+  },
+  "counts": {
+    "frame": {
+      "min": 7,
+      "max": 9
+    },
+    "text": 7,
+    "image": 0,
+    "vector": 2
+  },
+  "assets": {
+    "image": 0,
+    "svg": 2
+  },
+  "assetContains": {
+    "svg": [
+      "M3 10 12 3l9 7v11H3V10Z",
+      "M12 3a6 6 0 0 0-6 6v4l-2 3h16l-2-3V9a6 6 0 0 0-6-6Z",
+      "stroke=\"#9c4679\"",
+      "fill=\"none\"",
+      "stroke-width=\"1.5\""
+    ]
+  },
+  "fonts": [
+    {
+      "family": "Inter",
+      "weights": [400, 600]
+    }
+  ],
+  "tokens": [
+    {
+      "name": "--color-primary",
+      "value": "#9c4679",
+      "kind": "color"
+    }
+  ],
+  "mustExist": [
+    ["div.screen", "frame"],
+    ["div.icon-row", "frame"],
+    ["svg.icon", "vector"],
+    ["div.dock", "frame"],
+    ["div.float", "frame"]
+  ],
+  "textNodes": [
+    "Home",
+    "Alerts",
+    "In the flow, first",
+    "In the flow, second"
+  ],
+  "nameCounts": {
+    "svg.icon": 2
+  },
+  "nodes": {
+    "div.dock": {
+      "layout": {
+        "mode": "column",
+        "gap": 8
+      }
+    },
+    "div.float": {
+      "flow": "absolute"
+    }
+  }
+}

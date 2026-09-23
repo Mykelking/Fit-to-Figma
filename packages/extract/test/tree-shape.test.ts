@@ -139,6 +139,24 @@ describe('the shape of the tree', () => {
     );
   });
 
+  it('marks a box the browser took out of the flow', async () => {
+    const out = await extractWithReport(
+      mount({
+        css: CSS,
+        body: `
+          <div class="screen" data-rect="0,0,390,240">
+            <div class="in-flow" data-rect="16,16,358,60">in the flow</div>
+            <div class="float" style="position: absolute" data-rect="306,164,56,56">+</div>
+            <div class="stuck" style="position: sticky" data-rect="16,90,358,20">stuck</div>
+          </div>
+        `,
+      }),
+    );
+    expect(named(out.tree, 'float')?.flow).toBe('absolute');
+    expect(named(out.tree, 'stuck')?.flow).toBe('absolute');
+    expect(named(out.tree, 'in-flow')?.flow).toBeUndefined();
+  });
+
   it('keeps what the page hid when asked to', async () => {
     const all = await extractWithReport(mount({ css: CSS, body: BODY }), {
       includeHidden: true,

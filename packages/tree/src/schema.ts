@@ -154,10 +154,19 @@ export const fontStyleSchema = z.looseObject({
   letterSpacing: z.number(),
 });
 
+export const lineBoxSchema = z.looseObject({
+  text: z.string(),
+  x: z.number(),
+  y: z.number(),
+  w: z.number(),
+  h: z.number(),
+});
+
 export const textStyleSchema = z.looseObject({
   content: z.string(),
   font: fontStyleSchema,
   lines: z.number().int().min(1).optional(),
+  lineBoxes: z.array(lineBoxSchema).optional(),
   color: hex6,
   opacity: unit,
   align: z.enum(['left', 'center', 'right']),
@@ -189,6 +198,7 @@ export const nodeSchema = z.looseObject({
   effects: z.array(effectSchema).optional(),
   opacity: unit.optional(),
   clip: z.boolean().optional(),
+  flow: z.literal('absolute').optional(),
   text: textStyleSchema.optional(),
   asset: z.string().optional(),
   semantic: semanticSchema.optional(),

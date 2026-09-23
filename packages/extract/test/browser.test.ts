@@ -118,7 +118,8 @@ when('a real browser', () => {
       (node) => node.type === 'vector' && node.semantic?.classes?.includes('tab-icon'),
     );
     const markup = tree.assets[active?.asset ?? '']?.data ?? '';
-    expect(markup).toContain('rgb(156, 70, 121)');
+    // Written as an attribute, in hex: the asset owes nothing to CSS.
+    expect(markup).toContain('stroke="#9c4679"');
   });
 
   it('lifts the custom properties off :root', () => {

@@ -42,6 +42,7 @@ export class FakeNode {
   parent: FakeContainer | null = null;
   layoutSizingHorizontalValue: string | null = null;
   layoutSizingVerticalValue: string | null = null;
+  private positioning = 'AUTO';
   removed = false;
   private readonly plugin = new Map<string, string>();
 
@@ -70,6 +71,19 @@ export class FakeNode {
       if (i >= 0) this.parent.children.splice(i, 1);
       this.parent = null;
     }
+  }
+
+  get layoutPositioning(): string {
+    return this.positioning;
+  }
+
+  /** Figma only takes a child out of a layout there is one to be out of. */
+  set layoutPositioning(mode: string) {
+    const parent = this.parent as FakeFrame | null;
+    if (mode === 'ABSOLUTE' && (!parent || parent.layoutMode === undefined || parent.layoutMode === 'NONE')) {
+      throw new Error('ABSOLUTE needs a parent with auto layout');
+    }
+    this.positioning = mode;
   }
 
   get layoutSizingHorizontal(): string {

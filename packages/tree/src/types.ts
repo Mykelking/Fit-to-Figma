@@ -98,6 +98,8 @@ export interface Node {
   effects?: Effect[];
   opacity?: number;
   clip?: boolean;
+  /** Set when the browser took the box out of the flow: absolute, fixed or sticky. */
+  flow?: 'absolute';
   /** Text nodes only. */
   text?: TextStyle;
   /** Image and vector nodes only: a key into `assets`. */
@@ -215,11 +217,22 @@ export type TextAlign = 'left' | 'center' | 'right';
 export type TextDecoration = 'none' | 'underline' | 'strike';
 export type TextTransform = 'none' | 'upper' | 'lower';
 
+/** One line the browser drew, and where it drew it. Relative to the root frame. */
+export interface LineBox {
+  text: string;
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+}
+
 export interface TextStyle {
   content: string;
   font: FontStyle;
   /** How many lines the browser drew this run on. Optional. */
   lines?: number;
+  /** Every line of a run that wrapped, in order. Optional. */
+  lineBoxes?: LineBox[];
   color: string;
   opacity: number;
   align: TextAlign;
