@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Masks</title>
+<meta name="viewport" content="width=390, initial-scale=1">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: 390px; }
+  body {
+    font-family: Inter, sans-serif;
+    font-size: 16px;
+    line-height: 24px;
+    color: #14121a;
+    background: #ffffff;
+  }
+  .screen { display: flex; flex-direction: column; align-items: flex-start; gap: 24px; padding: 24px; }
+
+  /* A logo drawn as a tinted mask: the box paints, the mask decides where. */
+  .gi-mark {
+    display: block;
+    background-color: currentColor;
+    mask-size: contain;
+    mask-position: center;
+    mask-repeat: no-repeat;
+  }
+
+  /* An svg mask, twice as wide as it is tall, under a gradient. */
+  .mark-svg {
+    width: 120px; height: 120px;
+    background-image: linear-gradient(90deg, #9c4679, #2f6fdb);
+    mask-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 20'><rect width='20' height='20' rx='4'/><circle cx='30' cy='10' r='8' fill='none' stroke='black' stroke-width='3'/></svg>");
+  }
+
+  /* A raster mask with alpha, square, in a wide box, in the text colour. */
+  .mark-png {
+    width: 80px; height: 40px;
+    color: #9c4679;
+    mask-image: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAArklEQVR42u2XzQ3AIAhGPTiE4zCOQ7iOm7mEJ0sTmvTQWv+hiSTv0tQCH6hUqW0/NI0AYhFHWHqmZzo+HXgkIumFSO/ASMeGPpoq8bS2O+vQ4Pwi9KgBH3KXEluCMJ2ZPylRVQ4/0Pm9J4qlT5MAruyLVdCDGi/XkJpL/qIy2AUB2FwAbkEATnQA7CVgb0L2bch+EIk4itkvIxHXMftAImIkEzGUihjLxfyYbJtiB47f6WzkP9hTAAAAAElFTkSuQmCC");
+  }
+
+  .caption { font-size: 14px; line-height: 20px; }
+</style>
+</head>
+<body>
+
+<div class="screen">
+  <span class="gi-mark mark-svg" aria-hidden="true"></span>
+  <i class="gi-mark mark-png" aria-hidden="true"></i>
+  <p class="caption">Two marks, drawn by their masks.</p>
+</div>
+
+</body>
+</html>

@@ -188,13 +188,13 @@ function scaleOf(size: string): 'fill' | 'fit' {
   return size.trim().toLowerCase() === 'contain' ? 'fit' : 'fill';
 }
 
-function urlIn(layer: string): string | null {
+export function urlIn(layer: string): string | null {
   const match = /^url\((['"]?)([\s\S]*?)\1\)$/i.exec(layer.trim());
   return match?.[2] ?? null;
 }
 
 /** Split a comma separated background list, respecting brackets. */
-function splitLayers(value: string): string[] {
+export function splitLayers(value: string): string[] {
   const out: string[] = [];
   let depth = 0;
   let start = 0;

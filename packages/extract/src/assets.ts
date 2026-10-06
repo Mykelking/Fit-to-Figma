@@ -166,7 +166,7 @@ export function toBase64(buffer: ArrayBuffer): string {
   return btoa(binary);
 }
 
-function atobSafe(base64: string): string {
+export function atobSafe(base64: string): string {
   try {
     return decodeURIComponent(escape(atob(base64)));
   } catch {
@@ -188,7 +188,7 @@ export function parseDataUrl(
   return { mime, base64: btoa(unescape(encodeURIComponent(text))), text };
 }
 
-function mimeFromUrl(url: string): string {
+export function mimeFromUrl(url: string): string {
   const clean = url.split('?')[0]?.split('#')[0] ?? url;
   const ext = clean.slice(clean.lastIndexOf('.') + 1).toLowerCase();
   switch (ext) {

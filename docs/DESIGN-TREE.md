@@ -83,6 +83,7 @@ Rules the extractor keeps:
 - A flex or grid container becomes `layout`; anything else is a frame with absolutely placed children.
 - Text is one node per element that holds text, with the run's computed font. A text node with mixed runs is split into siblings.
 - Inline SVG becomes a vector asset; `<img>` and CSS background images become image assets; an icon drawn by a font stays text.
+- A CSS mask with a `url()` becomes the shape it draws, painted with the element's background: an SVG mask a vector, a raster mask an image recoloured to that colour, placed by `mask-size` and `mask-position`. The element's box stops painting, because the mask was all of it that showed.
 - Hidden, zero-sized and off-canvas elements are dropped. Scroll containers keep the visible part.
 - `semantic` is carried for the plugin's component matching and is never needed to draw.
 

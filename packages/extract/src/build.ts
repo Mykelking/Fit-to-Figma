@@ -5,6 +5,7 @@ import type { Fonts } from './fonts.js';
 import type { Box } from './geometry.js';
 import { boxFromRect, intersect, isEmpty, round, roundBox } from './geometry.js';
 import type { Ids } from './ids.js';
+import { maskNode } from './mask.js';
 import { nameOf, semanticOf } from './semantic.js';
 import type { LayoutFor, Viewport } from './style.js';
 import {
@@ -183,6 +184,25 @@ export async function buildElement(
   if (media) return [node];
   if (own.layout) node.layout = own.layout;
 
+  const mask = await maskNode({
+    el,
+    style,
+    box,
+    fills: node.fills ?? [],
+    assets: ctx.assets,
+    ids: ctx.ids,
+    warnings: ctx.warnings,
+    path: frame.path,
+    nodeId: id,
+  });
+  if (mask) {
+    // The mask was all of the background that showed, and it cut the border
+    // and the shadow away with the rest of the box.
+    delete node.fills;
+    delete node.strokes;
+    delete node.effects;
+  }
+
   if (frame.depth >= ctx.maxDepth) {
     for (const note of own.notes) ctx.warnings.add('layout-approximated', note, { node: id });
     if (el.children.length > 0 || hasDirectText(el)) {
@@ -192,6 +212,7 @@ export async function buildElement(
         { node: id },
       );
     }
+    if (mask) node.children = [mask];
     return [node];
   }
 
@@ -215,6 +236,8 @@ export async function buildElement(
   );
 
   reportLayout(node, own, children, ctx, id);
+  // Under everything the element holds: the mask drew its background.
+  if (mask) children.unshift(mask);
 
   if (children.length === 0) return [node];
 

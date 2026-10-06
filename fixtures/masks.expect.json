@@ -1,0 +1,57 @@
+{
+  "fixture": "masks.html",
+  "what": "Two logos drawn as CSS masks, both contain and centred, the way a page tints a mark in its own colour: an svg mask under a gradient, and a raster mask with alpha in currentColor. Each must come out as the shape itself, painted with what the box painted, and the box must stop painting.",
+  "viewport": {
+    "w": 390,
+    "h": 844
+  },
+  "counts": {
+    "frame": 5,
+    "text": 1,
+    "image": 1,
+    "vector": 1
+  },
+  "assets": {
+    "image": 1,
+    "svg": 1
+  },
+  "assetContains": {
+    "svg": [
+      "<linearGradient id=\"fit-mask-tint\"",
+      "stop-color=\"#9c4679\"",
+      "stop-color=\"#2f6fdb\"",
+      "fill=\"url(#fit-mask-tint)\"",
+      "stroke=\"url(#fit-mask-tint)\"",
+      "fill=\"none\""
+    ]
+  },
+  "fonts": [
+    {
+      "family": "Inter",
+      "weights": [400]
+    }
+  ],
+  "mustExist": [
+    ["span.gi-mark.mark-svg", "frame"],
+    ["span mask", "vector"],
+    ["i.gi-mark.mark-png", "frame"],
+    ["i mask", "image"]
+  ],
+  "textNodes": [
+    "Two marks, drawn by their masks."
+  ],
+  "nodes": {
+    "span.gi-mark.mark-svg": {
+      "fillTypes": []
+    },
+    "i.gi-mark.mark-png": {
+      "fillTypes": []
+    },
+    "span mask": {
+      "flow": "absolute"
+    },
+    "i mask": {
+      "flow": "absolute"
+    }
+  }
+}

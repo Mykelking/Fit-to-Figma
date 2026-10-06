@@ -255,7 +255,9 @@ function inlineUses(
   warnings: Warnings,
   nodeId: string,
 ): void {
-  const doc = originalSvg.ownerDocument;
+  // A drawing mounted in a shadow root keeps its ids there, not on the document.
+  const root = originalSvg.getRootNode?.() as Document | ShadowRoot | undefined;
+  const doc = root && typeof root.getElementById === 'function' ? root : originalSvg.ownerDocument;
   // Bounded: a symbol that uses itself would otherwise never finish.
   for (let pass = 0; pass < 8; pass += 1) {
     const uses = Array.from(clone.querySelectorAll('use'));
@@ -372,6 +374,42 @@ function scrub(root: Element): void {
       }
     }
   }
+}
+
+/**
+ * Repaint a drawing that was only ever a mask.
+ *
+ * A mask uses the drawing's coverage, never its colours, so every shape that
+ * paints is painted with `paint` instead, and what painted nothing stays
+ * empty. `defs` goes in first, for a gradient the paint refers to. The markup
+ * comes from `serialiseSvg`, so the paint is already on the elements and a
+ * stylesheet left inside would only argue with it.
+ */
+export function tintSvg(markup: string, paint: string, defs = ''): string {
+  if (typeof DOMParser !== 'function') return markup;
+  const doc = new DOMParser().parseFromString(markup, 'image/svg+xml');
+  const root = doc.documentElement;
+  if (!root || root.tagName.toLowerCase() !== 'svg') return markup;
+
+  for (const style of Array.from(root.querySelectorAll('style'))) style.remove();
+  for (const el of [root, ...Array.from(root.querySelectorAll('*'))]) {
+    if (!DRAWN.has(el.tagName.toLowerCase())) continue;
+    // Shapes inside a mask or a clip path are coverage already, not paint.
+    if (el.closest('mask, clipPath')) continue;
+    if (el.getAttribute('fill') !== 'none') el.setAttribute('fill', paint);
+    const stroke = el.getAttribute('stroke');
+    if (stroke && stroke !== 'none') el.setAttribute('stroke', paint);
+  }
+
+  if (defs !== '') {
+    const holder = new DOMParser().parseFromString(
+      `<svg xmlns="${SVG_NS}"><defs>${defs}</defs></svg>`,
+      'image/svg+xml',
+    );
+    const made = holder.documentElement.firstElementChild;
+    if (made) root.insertBefore(doc.importNode(made, true), root.firstChild);
+  }
+  return serialise(root);
 }
 
 /** Is there still an `xlink:href` anywhere, after the uses were inlined? */

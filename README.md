@@ -49,6 +49,7 @@ It writes one JSON file, the design tree, described in [docs/DESIGN-TREE.md](doc
 | `overflow: hidden` | clip content |
 | text | Text layer: family, weight, style, size, line height, letter spacing, colour, align, decoration, case |
 | icon font glyph | Text layer |
+| `mask-image: url()` over a colour or gradient | Vector or image of the mask's shape, in that colour |
 | CSS custom properties | Figma variables, in a collection named after the source; matching colours are bound to them |
 | hidden, zero-size or off-canvas elements | dropped |
 
